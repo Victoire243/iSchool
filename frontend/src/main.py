@@ -5,17 +5,17 @@ from flet import *  # type: ignore
 # import asyncio
 
 # Imports des modules locaux
-from core import Config
-from core import AppState
+from core import AppState, Constants
 from screens import LoginScreen
-from utils import StorageUtils
 
 
 class MainAppp:
-    def __init__(self, page: Page, is_logged_in: bool) -> None:
+    def __init__(self, page: Page, is_logged_in: bool, is_first_launch: bool) -> None:
         self.page: Page = page
         self.app_state = AppState()
         self.app_state.is_logged_in = is_logged_in
+        self.is_first_launch = is_first_launch
+        self.translations = self.app_state.translations
 
         self._load_screens()
 
@@ -25,6 +25,7 @@ class MainAppp:
             on_login_success=self.on_login_success,
             on_change_language=self.change_language,
             page=self.page,
+            is_first_launch=self.is_first_launch,
         )
         # self.login_screen.set_page(self.page)
         self._setup_screen(self.login_screen.build_page())
@@ -36,21 +37,363 @@ class MainAppp:
         self.page.bgcolor = "white"
         self.page.controls = [SafeArea(content=screen, expand=True)]
 
-    def on_login_success(self):
-        pass
+    def get_text(self, key: str):
+        return self.translations.get(key, "Xxxxxxxxxxxxx")
+
+    def on_logout(self, e):
+        self.app_state.current_user = None
+        self.page.update()
+        self._load_screens()
+
+    def on_login_success(self, app_state: AppState):
+        self.app_state = app_state
+        self.init_ui_components()
+        self.show_main_layout()
 
     def change_language(self, language: str):
         self.app_state.current_language = language
         self.app_state.translations = self.app_state.load_translations(language)
+        self.translations = self.app_state.translations
         self._load_screens()
+
+    def change_home_language(self, e: Event):
+        self.app_state.current_language = e.control.value
+        self.app_state.translations = self.app_state.load_translations(e.control.value)
+        self.translations = self.app_state.translations
+        self.init_ui_components()
+        self.show_main_layout()
+
+    def init_ui_components(self):
+        """Initialiser les composants UI"""
+
+        # Menu langue
+        self.menu_language = Dropdown(
+            text="Français" if self.app_state.current_language == "fr" else "English",
+            label="Langue" if self.app_state.current_language == "fr" else "Language",
+            options=[
+                DropdownOption(key="fr", text="Français"),
+                DropdownOption(key="en", text="English"),
+            ],
+            align=Alignment.CENTER_LEFT,
+            margin=Margin.only(right=20, bottom=20),
+            on_change=self.change_home_language,
+            dense=True,
+            menu_style=MenuStyle(alignment=Alignment.CENTER_LEFT),
+        )
+
+        # Barre de navigation
+        self.navigation_rail = NavigationRail(
+            height=self.page.height * 2,
+            selected_index=0,
+            label_type=NavigationRailLabelType.ALL,
+            extended=True,
+            min_width=100,
+            min_extended_width=200,
+            leading=FloatingActionButton(
+                icon=Icons.MENU,
+                mini=True,
+                on_click=self.toggle_navigation,
+                tooltip=self.get_text("menu"),
+            ),
+            group_alignment=-0.9,
+            destinations=self.get_navigation_destinations(),
+            on_change=self.on_navigation_change,
+            visible=True,
+            elevation=2,
+            bgcolor=Constants.PRIMARY_COLOR,
+            indicator_color=Colors.WHITE,
+            selected_label_text_style=TextStyle(
+                color=Colors.WHITE, size=16, weight=FontWeight.BOLD
+            ),
+            unselected_label_text_style=TextStyle(color=Colors.WHITE, size=14),
+            expand_loose=True,
+        )
+
+        # Barre d'application
+        self.app_bar = AppBar(
+            title=Text(Constants.APP_NAME, weight=FontWeight.BOLD),
+            center_title=True,
+            bgcolor=Constants.PRIMARY_COLOR,
+            color=Colors.WHITE,
+            actions=[
+                IconButton(
+                    icon=Icons.NOTIFICATIONS,
+                    tooltip=self.get_text("notifications"),
+                    # on_click=self.show_notifications,
+                ),
+                IconButton(
+                    icon=Icons.BRIGHTNESS_6,
+                    tooltip=self.get_text("changetheme"),
+                    on_click=self.toggle_theme,
+                ),
+                PopupMenuButton(
+                    items=[
+                        PopupMenuItem(
+                            content=f"{self.get_text('connected')}: {self.app_state.current_user.username if self.app_state.current_user else self.get_text('invite')}",
+                            icon=Icons.PERSON,
+                            disabled=True,
+                        ),
+                        PopupMenuItem(),  # Séparateur
+                        PopupMenuItem(
+                            content=self.get_text("profile"),
+                            icon=Icons.ACCOUNT_CIRCLE,
+                            # on_click=self.show_profile,
+                        ),
+                        PopupMenuItem(
+                            content=self.menu_language,
+                            icon=Icons.LANGUAGE,
+                        ),
+                        PopupMenuItem(
+                            content=self.get_text("deconnexion"),
+                            icon=Icons.LOGOUT,
+                            on_click=self.on_logout,
+                        ),
+                    ]
+                ),
+            ],
+            visible=True,
+        )
+
+        # Zone de contenu principal
+        self.content_area = Container(
+            expand=True,
+            # expand_loose=True,
+            # height=self.page.height,
+            # padding=padding.all(20),
+            # margin=margin.only(bottom=20),
+        )
+
+    def get_navigation_destinations(self):
+        """Obtenir les destinations de navigation selon les permissions"""
+        destinations = []
+
+        # Tableau de bord (toujours visible)
+        destinations.append(
+            NavigationRailDestination(
+                icon=Icon(
+                    Icons.DASHBOARD,
+                    color=Colors.WHITE,
+                    tooltip=self.get_text("dashboard"),
+                ),
+                selected_icon=Icons.DASHBOARD,
+                label=self.get_text("dashboard"),
+                tooltip=self.get_text("dashboard"),
+            )
+        )
+
+        # Élèves
+        destinations.append(
+            NavigationRailDestination(
+                icon=Icon(
+                    Icons.PEOPLE, color=Colors.WHITE, tooltip=self.get_text("students")
+                ),
+                selected_icon=Icons.PEOPLE,
+                label=self.get_text("students"),
+                tooltip=self.get_text("students"),
+            )
+        )
+
+        # Paiements
+        destinations.append(
+            NavigationRailDestination(
+                icon=Icon(
+                    Icons.PAYMENT, color=Colors.WHITE, tooltip=self.get_text("payments")
+                ),
+                selected_icon=Icons.PAYMENT,
+                label=self.get_text("payments"),
+                tooltip=self.get_text("payments"),
+            )
+        )
+
+        # Caisse
+        destinations.append(
+            NavigationRailDestination(
+                icon=Icon(
+                    Icons.ACCOUNT_BALANCE_WALLET,
+                    color=Colors.WHITE,
+                    tooltip=self.get_text("checkout"),
+                ),
+                selected_icon=Icons.ACCOUNT_BALANCE_WALLET,
+                label=self.get_text("checkout"),
+                tooltip=self.get_text("checkout"),
+            )
+        )
+
+        # Rapports
+        destinations.append(
+            NavigationRailDestination(
+                icon=Icon(
+                    Icons.ASSESSMENT,
+                    color=Colors.WHITE,
+                    tooltip=self.get_text("reports"),
+                ),
+                selected_icon=Icons.ASSESSMENT,
+                label=self.get_text("reports"),
+                tooltip=self.get_text("reports"),
+            )
+        )
+
+        # Administration
+        destinations.append(
+            NavigationRailDestination(
+                icon=Icon(
+                    Icons.ADMIN_PANEL_SETTINGS,
+                    color=Colors.WHITE,
+                    tooltip=self.get_text("admin"),
+                ),
+                selected_icon=Icons.ADMIN_PANEL_SETTINGS,
+                label=self.get_text("admin"),
+                tooltip=self.get_text("admin"),
+            )
+        )
+
+        return destinations
+
+    def show_main_layout(self):
+        """Afficher la mise en page principale"""
+        self.content_area.content = Container(
+            content=Text("Tableau de Bord en cours de développement")
+        )
+
+        main_layout = Row(
+            controls=[
+                self.navigation_rail,
+                VerticalDivider(width=1),
+                Container(content=self.content_area, expand=True, padding=20),
+            ],
+            expand=True,
+            vertical_alignment=CrossAxisAlignment.START,
+            spacing=0,
+            expand_loose=True,
+        )
+
+        self.page.controls.clear()
+        self.page.add(
+            SafeArea(
+                content=Column(
+                    controls=[
+                        self.app_bar,
+                        Container(content=main_layout, expand=True),
+                    ],
+                    spacing=0,
+                    horizontal_alignment=CrossAxisAlignment.STRETCH,
+                ),
+                expand=True,
+                minimum_padding=Padding.all(0),
+            )
+        )
+        self.page.update()
+
+    def on_navigation_change(self, e: Event):
+        """Gérer le changement de navigation"""
+        index = e.control.selected_index
+        destinations = self.get_navigation_destinations()
+
+        if index >= len(destinations):
+            return
+
+        selected_label = destinations[index].label
+
+        if selected_label == "Tableau de Bord" or selected_label == "Dashboard":
+            self.content_area.content = Container(
+                content=Text("Tableau de Bord en cours de développement")
+            )
+            # self.content_area.content = self.dashboard_screen.build()
+            # asyncio.create_task(self.dashboard_screen.on_mount())
+
+        elif selected_label == "Élèves" or selected_label == "Students":
+            self.content_area.content = Container(
+                content=Text("Gestion des Élèves en cours de développement")
+            )
+        elif selected_label == "Paiements" or selected_label == "Payments":
+            self.content_area.content = Container(
+                content=Text("Gestion des Paiements en cours de développement")
+            )
+
+        elif selected_label == "Caisse" or selected_label == "Checkout":
+            self.content_area.content = Container(
+                content=Text("Gestion de la Caisse en cours de développement")
+            )
+
+        elif selected_label == "Rapports" or selected_label == "Reports":
+            self.content_area.content = Container(
+                content=Text("Gestion des Rapports en cours de développement")
+            )
+
+        elif selected_label == "Administration":
+            self.content_area.content = Container(
+                content=Text("Administration en cours de développement")
+            )
+
+        self.content_area.update()
+
+    def toggle_navigation(self, e):
+        """Basculer l'état de la navigation"""
+        self.navigation_rail.extended = not getattr(
+            self.navigation_rail, "extended", False
+        )
+        self.navigation_rail.label_type = (
+            NavigationRailLabelType.ALL
+            if self.navigation_rail.extended
+            else NavigationRailLabelType.NONE
+        )
+        self.navigation_rail.update()
+
+    def toggle_theme(self, e):
+        """Basculer le thème"""
+        if self.app_state.theme_mode == ThemeMode.LIGHT:
+            self.app_state.theme_mode = ThemeMode.DARK
+        else:
+            self.app_state.theme_mode = ThemeMode.LIGHT
+
+        self.page.theme_mode = self.app_state.theme_mode
+        self.page.update()
+
+    # async def show_notifications(self, e):
+    #     """Afficher les notifications"""
+    #     if self.app_state.notifications:
+    #         for notification in self.app_state.notifications:
+    #             try:
+    #                 self.notification_banner.show(
+    #                     notification["message"], notification["type"]
+    #                 )
+    #             except Exception:
+    #                 pass
+    #         self.app_state.clear_notifications()
+    #     else:
+    #         try:
+    #             self.notification_banner.show("Aucune nouvelle notification", "info")
+    #         except Exception:
+    #             try:
+    #                 self.notification_banner.close_banner(None)
+    #             except Exception:
+    #                 pass
+    #     # close the notification banner after showing notifications
+    #     await self.notification_banner.close_banner_after(Config.CLOSE_BANNER_TIME)
 
 
 async def main(page: Page):
-    is_logged_in = await StorageUtils.get_from_local_storage(page, "is_logged_in")
-    print(f"is_logged_in: {is_logged_in}")
-    app = MainAppp(page, is_logged_in)
+    # # Vérifier si l'utilisateur est connecté
+    # is_logged_in = await StorageUtils.get_from_local_storage(
+    #     page, Constants.STORAGE_KEY_IS_LOGGED_IN
+    # )
+
+    # # Vérifier si c'est la première ouverture de l'application
+    # first_launch_value = await StorageUtils.get_from_local_storage(
+    #     page, Constants.STORAGE_KEY_FIRST_LAUNCH
+    # )
+
+    # # Si la clé n'existe pas, c'est la première ouverture
+    # is_first_launch = first_launch_value is None or first_launch_value != "false"
+    is_logged_in = False  # For testing purposes
+    is_first_launch = False  # For testing purposes
+
+    # print(f"is_logged_in: {is_logged_in}")
+    # print(f"is_first_launch: {is_first_launch}")
+
+    app = MainAppp(page, is_logged_in, is_first_launch)
     page.update()
 
 
 if __name__ == "__main__":
-    asyncio.run(run_async(main))
+    run(main)

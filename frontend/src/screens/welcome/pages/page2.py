@@ -16,7 +16,7 @@ class Page2:
         self.translations = self.app_state.translations
 
     def get_text(self, key: str):
-        return self.translations.get(key, "XXXXXXXXXXX")
+        return self.translations.get(key, "Xxxxxxxxxxxxx")
 
     def build_page(self) -> Control:
         return Container(

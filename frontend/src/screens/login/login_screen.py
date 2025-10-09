@@ -16,11 +16,13 @@ class LoginScreen:
         on_login_success: Callable | Awaitable,
         on_change_language: Callable,
         page: Page | None = None,
+        is_first_launch: bool = True,
     ) -> None:
         self.on_login_success = on_login_success
         self.app_state = appState
         self.on_change_language = on_change_language
         self.page = page
+        self.is_first_launch = is_first_launch
 
         self.on_mount()
 
@@ -109,12 +111,20 @@ class LoginScreen:
         )
 
         self.welcome_screen = WelcomeScreen(self.app_state, self.change_page)
+
+        # Détermine quel contenu afficher
+        # Si l'utilisateur est connecté : afficher main_content
+        # Si c'est la première ouverture : afficher welcome_screen
+        # Sinon : afficher main_content (écran de connexion)
+        if self.app_state.is_logged_in:
+            initial_content = self.main_content
+        elif self.is_first_launch:
+            initial_content = self.welcome_screen.build_page()
+        else:
+            initial_content = self.main_content
+
         self.container = Container(
-            content=(
-                self.welcome_screen.build_page()
-                if not self.app_state.is_logged_in
-                else self.main_content
-            ),
+            content=initial_content,
             alignment=Alignment.CENTER,
             expand=True,
         )
@@ -142,6 +152,8 @@ class LoginScreen:
             self.error_text.visible = True
             self.error_text.update()
             return
+        self.app_state.current_user = result
+        self.on_login_success(self.app_state)
 
     def reset_login_form(self):
         self.user_name_field.value = ""
@@ -157,14 +169,17 @@ class LoginScreen:
 
     def change_page(self):
         self.container.content = self.main_content
+        # Marquer que l'application a été ouverte au moins une fois
         asyncio.run_coroutine_threadsafe(
-            StorageUtils.save_to_local_storage(self.page, "is_logged_in", True),
+            StorageUtils.save_to_local_storage(
+                self.page, Constants.STORAGE_KEY_FIRST_LAUNCH, "false"
+            ),
             asyncio.get_event_loop(),
-        ).add_done_callback(lambda f: print("is_logged_in saved to local storage"))
+        ).add_done_callback(lambda f: print("first_launch saved to local storage"))
         self.container.update()
 
     def get_text(self, key: str):
-        return self.translations.get(key, "XXXXXXXXXXX")
+        return self.translations.get(key, "Xxxxxxxxxxxxx")
 
     def build_page(self) -> Control:
         return Stack(
