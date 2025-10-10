@@ -80,5 +80,7 @@
     "amount_expenses":"Montant des d\u00e9penses",
     "cash_balance":"Solde de tr\u00e9sorerie",
     "total_expenses":"Total des d\u00e9penses",
-    "active_school_year": "Ann\u00e9e scolaire active"
+    "active_school_year": "Ann\u00e9e scolaire active",
+    "students_per_classroom": "Nombre d'\u00e9l\u00e8ves par classe",
+    "classrooms": "Classes"
 }

@@ -272,6 +272,7 @@ class MainAppp:
     def show_main_layout(self):
         """Afficher la mise en page principale"""
         self.content_area.content = self.dashboard_screen.build()
+        asyncio.create_task(self.dashboard_screen.on_mount())
 
         main_layout = Row(
             controls=[

@@ -80,5 +80,7 @@
     "amount_expenses":"Amount Expenses",
     "cash_balance":"Cash Balance",
     "total_expenses":"Total Expenses",
-    "active_school_year": "Active School Year"
+    "active_school_year": "Active School Year",
+    "students_per_classroom": "Students per Classroom",
+    "classrooms": "Classrooms"
 }

@@ -1,5 +1,11 @@
 from flet import *  # type: ignore
-from flet_charts import BarChart, BarChartGroup, BarChartRod, ChartAxis, ChartAxisLabel
+from flet_charts import (
+    BarChart,
+    BarChartGroup,
+    BarChartRod,
+    ChartAxis,
+    ChartAxisLabel,
+)
 from core import AppState, Constants
 from utils import Utils
 import asyncio
@@ -10,20 +16,27 @@ class DashboardScreen:
     def __init__(self, appState: AppState, page: Page | None = None) -> None:
         self.app_state = appState
         self.page = page
+        self.dashboard_services = DashboardServices(self.app_state)
 
         # Call on_mount as async task
         self.build_components()
-        asyncio.create_task(self.on_mount())
 
     async def on_mount(self):
         self.translations = self.app_state.translations
-        self.dashboard_services = DashboardServices(self.app_state)
         status, result = await self.dashboard_services.load_dashboard_summery()
         if status:
             self.load_data(result)
         else:
             self.main_content.content = Text("Error loading data")
-            self.main_content.update()
+            try:
+                self.main_content.update()
+            except Exception as e:
+                print(f"Error updating main content: {e}")
+
+    def refresh_dashboard(self, e):
+        self.main_content.content = self.loading_indicator
+        self.main_content.update()
+        asyncio.create_task(self.on_mount())
 
     def load_data(self, result: dict):
         self.total_students = result.get("total_students", 0)
@@ -70,7 +83,7 @@ class DashboardScreen:
                         ),
                         self.create_stat_card(
                             title=self.get_text("total_expenses"),
-                            value=f"${self.total_expenses:,.2f}",
+                            value=f"{self.total_expenses:,.1f}",
                             icon=Icons.MONEY_OFF,
                             color=Colors.BROWN,
                         ),
@@ -98,9 +111,59 @@ class DashboardScreen:
                     spacing=20,
                 ),
                 Container(
-                    padding=Padding.all(10),
-                    content=self.get_bar_graph_for_students_per_class(
-                        self.students_per_classroom
+                    padding=Padding.symmetric(vertical=10),
+                    content=Row(
+                        controls=[
+                            self.get_bar_graph_for_students_per_class(
+                                self.students_per_classroom
+                            ),
+                            Container(width=10),  # Spacer
+                            Container(
+                                expand=2,
+                                padding=Padding.all(10),
+                                content=Column(
+                                    controls=[
+                                        Text(
+                                            self.get_text("students_per_classroom"),
+                                            size=20,
+                                            weight=FontWeight.BOLD,
+                                            color=Constants.PRIMARY_COLOR,
+                                        ),
+                                        Divider(),
+                                        ListView(
+                                            expand=True,
+                                            spacing=5,
+                                            padding=Padding.all(0),
+                                            auto_scroll=True,
+                                            scroll=ScrollMode.AUTO,
+                                            controls=[
+                                                ListTile(
+                                                    leading=CircleAvatar(
+                                                        content=Text(
+                                                            str(i + 1),
+                                                            color=Colors.WHITE,
+                                                        ),
+                                                        bgcolor=Constants.PRIMARY_COLOR,
+                                                    ),
+                                                    title=Text(
+                                                        Utils.trunc_text(class_name),
+                                                        weight=FontWeight.BOLD,
+                                                    ),
+                                                    trailing=Text(
+                                                        f"{count} {self.get_text('students')}",
+                                                        weight=FontWeight.BOLD,
+                                                        color=Constants.SECONDARY_COLOR,
+                                                    ),
+                                                )
+                                                for i, (class_name, count) in enumerate(
+                                                    self.students_per_classroom.items()
+                                                )
+                                            ],
+                                        ),
+                                    ]
+                                ),
+                            ),
+                        ]
                     ),
                     **self.get_box_style(),
                 ),
@@ -110,7 +173,10 @@ class DashboardScreen:
             scroll=ScrollMode.AUTO,
             horizontal_alignment=CrossAxisAlignment.STRETCH,
         )
-        self.main_content.update()
+        try:
+            self.main_content.update()
+        except Exception as e:
+            print(f"Error updating main content: {e}")
 
     def get_bar_graph_for_students_per_class(self, data: dict) -> Control:
         return BarChart(
@@ -124,7 +190,7 @@ class DashboardScreen:
                             width=40,
                             color=Constants.PRIMARY_COLOR,
                             border_radius=0,
-                            tooltip=f"{class_name}: {count} {self.get_text("students")}",
+                            tooltip=f"{class_name}: {count} {self.get_text('students')}",
                         )
                     ],
                 )
@@ -141,9 +207,10 @@ class DashboardScreen:
                     ChartAxisLabel(value=i, label=Utils.trunc_text(class_name))
                     for i, (class_name, count) in enumerate(data.items())
                 ],
-                title=Text(self.get_text("classroom"), weight=FontWeight.BOLD),
+                title=Text(self.get_text("classrooms"), weight=FontWeight.BOLD),
             ),
             margin=Margin.all(10),
+            expand=3,
         )
 
     def get_text(self, key: str) -> str:
@@ -198,11 +265,23 @@ class DashboardScreen:
             horizontal_alignment=CrossAxisAlignment.STRETCH,
             controls=[
                 Container(
-                    content=Text(
-                        value=self.get_text("dashboard"),
-                        size=24,
-                        weight=FontWeight.BOLD,
-                        color=Constants.PRIMARY_COLOR,
+                    content=Row(
+                        controls=[
+                            Text(
+                                value=self.get_text("dashboard"),
+                                size=24,
+                                weight=FontWeight.BOLD,
+                                color=Constants.PRIMARY_COLOR,
+                            ),
+                            IconButton(
+                                icon=Icons.REFRESH,
+                                icon_color=Constants.PRIMARY_COLOR,
+                                tooltip=self.get_text("refresh"),
+                                on_click=self.refresh_dashboard,
+                            ),
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=CrossAxisAlignment.CENTER,
                     ),
                     padding=Padding.symmetric(horizontal=20, vertical=10),
                     align=Alignment.CENTER_LEFT,
