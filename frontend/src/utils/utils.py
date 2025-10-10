@@ -33,3 +33,7 @@ class Utils:
     @staticmethod
     def capitalize_words(text: str) -> str:
         return " ".join(word.capitalize() for word in text.split())
+
+    @staticmethod
+    def trunc_text(text: str, length: int = 7) -> str:
+        return text[:length] + "..." if len(text) > length else text

@@ -73,5 +73,12 @@
     "new_password":"Nouveau mot de passe",
     "confirm_new_password":"Confirmer le nouveau mot de passe",
     "password_mismatch":"Les mots de passe ne correspondent pas",
-    "checkout":"Caisse"
+    "checkout":"Caisse",
+    "total_students":"Total des \u00e9l\u00e8ves",
+    "total_payments":"Total des paiements",
+    "amount_payments":"Montant des paiements",
+    "amount_expenses":"Montant des d\u00e9penses",
+    "cash_balance":"Solde de tr\u00e9sorerie",
+    "total_expenses":"Total des d\u00e9penses",
+    "active_school_year": "Ann\u00e9e scolaire active"
 }

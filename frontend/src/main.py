@@ -6,7 +6,8 @@ from flet import *  # type: ignore
 
 # Imports des modules locaux
 from core import AppState, Constants
-from screens import LoginScreen
+from screens import LoginScreen, DashboardScreen
+from models import UserModel
 
 
 class MainAppp:
@@ -28,17 +29,30 @@ class MainAppp:
             is_first_launch=self.is_first_launch,
         )
         # self.login_screen.set_page(self.page)
-        self._setup_screen(self.login_screen.build_page())
+        self.dashboard_screen = DashboardScreen(
+            appState=self.app_state,
+            page=self.page,
+        )
+
+        # self._setup_screen(self.login_screen.build_page())
+        # For testing purposes, directly show main layout
+        self.app_state.current_user = UserModel(
+            id_user=1,
+            username="admin",
+            email="admin@example.com",
+            password="admin",
+            role_id=1,
+        )
+        self.on_login_success(self.app_state)
 
     def _setup_screen(self, screen: Control):
 
         self.page.controls.clear()
-        self.page.padding = 0
         self.page.bgcolor = "white"
         self.page.controls = [SafeArea(content=screen, expand=True)]
 
     def get_text(self, key: str):
-        return self.translations.get(key, "Xxxxxxxxxxxxx")
+        return self.app_state.translations.get(key, "Xxxxxxxxxxxxx")
 
     def on_logout(self, e):
         self.app_state.current_user = None
@@ -178,6 +192,7 @@ class MainAppp:
                 selected_icon=Icons.DASHBOARD,
                 label=self.get_text("dashboard"),
                 tooltip=self.get_text("dashboard"),
+                data="dashboard",
             )
         )
 
@@ -190,6 +205,7 @@ class MainAppp:
                 selected_icon=Icons.PEOPLE,
                 label=self.get_text("students"),
                 tooltip=self.get_text("students"),
+                data="students",
             )
         )
 
@@ -202,6 +218,7 @@ class MainAppp:
                 selected_icon=Icons.PAYMENT,
                 label=self.get_text("payments"),
                 tooltip=self.get_text("payments"),
+                data="payments",
             )
         )
 
@@ -216,6 +233,7 @@ class MainAppp:
                 selected_icon=Icons.ACCOUNT_BALANCE_WALLET,
                 label=self.get_text("checkout"),
                 tooltip=self.get_text("checkout"),
+                data="checkout",
             )
         )
 
@@ -230,6 +248,7 @@ class MainAppp:
                 selected_icon=Icons.ASSESSMENT,
                 label=self.get_text("reports"),
                 tooltip=self.get_text("reports"),
+                data="reports",
             )
         )
 
@@ -244,6 +263,7 @@ class MainAppp:
                 selected_icon=Icons.ADMIN_PANEL_SETTINGS,
                 label=self.get_text("admin"),
                 tooltip=self.get_text("admin"),
+                data="admin",
             )
         )
 
@@ -251,9 +271,7 @@ class MainAppp:
 
     def show_main_layout(self):
         """Afficher la mise en page principale"""
-        self.content_area.content = Container(
-            content=Text("Tableau de Bord en cours de développement")
-        )
+        self.content_area.content = self.dashboard_screen.build()
 
         main_layout = Row(
             controls=[
@@ -292,35 +310,33 @@ class MainAppp:
         if index >= len(destinations):
             return
 
-        selected_label = destinations[index].label
+        selected_data = destinations[index].data
 
-        if selected_label == "Tableau de Bord" or selected_label == "Dashboard":
-            self.content_area.content = Container(
-                content=Text("Tableau de Bord en cours de développement")
-            )
+        if selected_data == "dashboard":
+            self.content_area.content = self.dashboard_screen.build()
             # self.content_area.content = self.dashboard_screen.build()
             # asyncio.create_task(self.dashboard_screen.on_mount())
 
-        elif selected_label == "Élèves" or selected_label == "Students":
+        elif selected_data == "students":
             self.content_area.content = Container(
                 content=Text("Gestion des Élèves en cours de développement")
             )
-        elif selected_label == "Paiements" or selected_label == "Payments":
+        elif selected_data == "payments":
             self.content_area.content = Container(
                 content=Text("Gestion des Paiements en cours de développement")
             )
 
-        elif selected_label == "Caisse" or selected_label == "Checkout":
+        elif selected_data == "checkout":
             self.content_area.content = Container(
                 content=Text("Gestion de la Caisse en cours de développement")
             )
 
-        elif selected_label == "Rapports" or selected_label == "Reports":
+        elif selected_data == "reports":
             self.content_area.content = Container(
                 content=Text("Gestion des Rapports en cours de développement")
             )
 
-        elif selected_label == "Administration":
+        elif selected_data == "admin":
             self.content_area.content = Container(
                 content=Text("Administration en cours de développement")
             )
@@ -391,6 +407,7 @@ async def main(page: Page):
     # print(f"is_logged_in: {is_logged_in}")
     # print(f"is_first_launch: {is_first_launch}")
 
+    page.padding = 0
     app = MainAppp(page, is_logged_in, is_first_launch)
     page.update()
 

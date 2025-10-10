@@ -157,6 +157,36 @@ class FakeApiClient:
         )
         return [EnrollmentModel(**dict(row)) for row in rows]
 
+    async def list_students_per_classrorm(
+        self,
+    ) -> Optional[Dict[str, List[StudentModel]]]:
+        rows = await self._fetch_all(
+            """
+            SELECT c.id_classroom, c.name, s.*
+            FROM classrooms c
+            JOIN enrollments e ON c.id_classroom = e.classroom_id
+            JOIN students s ON e.student_id = s.id_student
+            ORDER BY c.id_classroom, s.last_name, s.first_name
+            """
+        )
+        if not rows:
+            return None
+
+        students_per_class: Dict[str, List[StudentModel]] = {}
+        for row in rows:
+            row_dict = dict(row)
+            class_name = row_dict["name"]
+            student = StudentModel(
+                **{
+                    k: v
+                    for k, v in row_dict.items()
+                    if k not in ("name", "id_classroom")
+                }
+            )
+            students_per_class.setdefault(class_name, []).append(student)
+
+        return students_per_class
+
     # ------------------------------------------------------------------
     # Payment types & payments
     async def list_payment_types(self) -> List[PaymentTypeModel]:
@@ -228,6 +258,15 @@ class FakeApiClient:
         summary["cash_balance"] = (
             summary["amount_payments"] - summary["amount_expenses"]
         )
+
+        active_school_year = await self.get_active_school_year()
+        summary["active_school_year"] = active_school_year.name
+
+        # Nombre d'eleves par classe : {class : student}
+        students_per_classroom = await self.list_students_per_classrorm()
+        students_per_classroom = {c: len(s) for c, s in students_per_classroom.items()}
+        summary["students_per_classroom"] = students_per_classroom
+
         return summary
 
     async def get_student_financial_statement(

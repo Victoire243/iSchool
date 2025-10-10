@@ -30,8 +30,6 @@ class LoginScreen:
         self.translations = self.app_state.translations
         self.login_services = LoginServices()
         self._build_components()
-        # print(f"Current language : {self.app_state.current_language}")
-        # print(f"Translations : {self.translations}")
 
     def set_page(self, page: Page):
         self.page = page
@@ -41,6 +39,8 @@ class LoginScreen:
             label=self.get_text("username"),
             hint_text=self.get_text("usernamehint"),
             prefix_icon=Icons.PERSON_OUTLINE,
+            autofocus=True,
+            on_submit=self.on_login,
         )
         self.password_field = TextField(
             label=self.get_text("password"),
@@ -48,6 +48,7 @@ class LoginScreen:
             password=True,
             can_reveal_password=True,
             prefix_icon=Icons.LOCK_OUTLINE,
+            on_submit=self.on_login,
         )
 
         self.login_button = Button(

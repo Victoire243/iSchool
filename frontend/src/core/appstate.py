@@ -21,7 +21,7 @@ class AppState:
         self._show_notifications: Callable | Awaitable | None = show_notifications
         self.current_school_year_id: int | None = None
         self.current_school_year_name: str | None = None
-        self.current_language: str = "fr"
+        self.current_language: str = "en"
         self.translations: dict = self.load_translations(self.current_language)
         self.is_logged_in: bool = False
 
@@ -52,6 +52,8 @@ class AppState:
         """Changer la langue de l'application"""
         try:
             import json
+
+            language = "fr" if not language else language.lower()
 
             with open(f"langs/{language}.json") as f:
                 translations = f.read()

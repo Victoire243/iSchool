@@ -73,5 +73,12 @@
     "new_password":"New Password",
     "confirm_new_password":"Confirm New Password",
     "password_mismatch":"New passwords do not match",
-    "checkout":"Checkout"
+    "checkout":"Checkout",
+    "total_students":"Total Students",
+    "total_payments":"Total Payments",
+    "amount_payments":"Amount Payments",
+    "amount_expenses":"Amount Expenses",
+    "cash_balance":"Cash Balance",
+    "total_expenses":"Total Expenses",
+    "active_school_year": "Active School Year"
 }
