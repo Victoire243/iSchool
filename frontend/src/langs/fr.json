@@ -82,5 +82,6 @@
     "total_expenses":"Total des d\u00e9penses",
     "active_school_year": "Ann\u00e9e scolaire active",
     "students_per_classroom": "Nombre d'\u00e9l\u00e8ves par classe",
-    "classrooms": "Classes"
+    "classrooms": "Classes",
+    "students_management": "Gestion des \u00e9l\u00e8ves"
 }

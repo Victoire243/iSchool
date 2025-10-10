@@ -6,7 +6,7 @@ from flet import *  # type: ignore
 
 # Imports des modules locaux
 from core import AppState, Constants
-from screens import LoginScreen, DashboardScreen
+from screens import LoginScreen, DashboardScreen, StudentsScreen
 from models import UserModel
 
 
@@ -31,6 +31,11 @@ class MainAppp:
         # self.login_screen.set_page(self.page)
         self.dashboard_screen = DashboardScreen(
             appState=self.app_state,
+            page=self.page,
+        )
+
+        self.students_screen = StudentsScreen(
+            app_state=self.app_state,
             page=self.page,
         )
 
@@ -319,9 +324,7 @@ class MainAppp:
             # asyncio.create_task(self.dashboard_screen.on_mount())
 
         elif selected_data == "students":
-            self.content_area.content = Container(
-                content=Text("Gestion des Élèves en cours de développement")
-            )
+            self.content_area.content = self.students_screen.build()
         elif selected_data == "payments":
             self.content_area.content = Container(
                 content=Text("Gestion des Paiements en cours de développement")

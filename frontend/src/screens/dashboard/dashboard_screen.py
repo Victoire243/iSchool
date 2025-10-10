@@ -18,7 +18,6 @@ class DashboardScreen:
         self.page = page
         self.dashboard_services = DashboardServices(self.app_state)
 
-        # Call on_mount as async task
         self.build_components()
 
     async def on_mount(self):
