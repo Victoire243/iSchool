@@ -22,7 +22,7 @@ class DashboardScreen:
 
     async def on_mount(self):
         self.translations = self.app_state.translations
-        status, result = await self.dashboard_services.load_dashboard_summery()
+        status, result = await self.dashboard_services.load_dashboard_summary()
         if status:
             self.load_data(result)
         else:

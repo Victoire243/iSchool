@@ -157,7 +157,7 @@ class FakeApiClient:
         )
         return [EnrollmentModel(**dict(row)) for row in rows]
 
-    async def list_students_per_classrorm(
+    async def list_students_per_classroom(
         self,
     ) -> Optional[Dict[str, List[StudentModel]]]:
         rows = await self._fetch_all(
@@ -263,7 +263,7 @@ class FakeApiClient:
         summary["active_school_year"] = active_school_year.name
 
         # Nombre d'eleves par classe : {class : student}
-        students_per_classroom = await self.list_students_per_classrorm()
+        students_per_classroom = await self.list_students_per_classroom()
         students_per_classroom = {c: len(s) for c, s in students_per_classroom.items()}
         summary["students_per_classroom"] = students_per_classroom
 

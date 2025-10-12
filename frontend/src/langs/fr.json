@@ -83,5 +83,20 @@
     "active_school_year": "Ann\u00e9e scolaire active",
     "students_per_classroom": "Nombre d'\u00e9l\u00e8ves par classe",
     "classrooms": "Classes",
-    "students_management": "Gestion des \u00e9l\u00e8ves"
+    "students_management": "Gestion des \u00e9l\u00e8ves",
+    "total_classrooms": "Total des classes",
+    "average_students_per_classroom": "Moyenne d'\u00e9l\u00e8ves par classe",
+    "students_list": "Liste des \u00e9l\u00e8ves",
+    "full_name": "Nom complet",
+    "enter_full_name": "Entrez le nom complet",
+    "full_name_helper":"Nom, Post-nom, Pr\u00e9nom",
+    "birth_date": "Date de naissance",
+    "enter_birth_date": "Entrez la date de naissance",
+    "date_format_dd_mm_yyyy": "Format de date : JJ/MM/AAAA",
+    "classroom": "Classe",
+    "select_classroom": "S\u00e9lectionnez la classe",
+    "submit":"Soumettre",
+    "cancel":"Annuler",
+    "add_student":"Ajouter un \u00e9l\u00e8ve",
+    "close_form":"Fermer le formulaire"
 }

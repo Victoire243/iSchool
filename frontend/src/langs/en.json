@@ -83,5 +83,20 @@
     "active_school_year": "Active School Year",
     "students_per_classroom": "Students per Classroom",
     "classrooms": "Classrooms",
-    "students_management": "Students Management"
+    "students_management": "Students Management",
+    "total_classrooms": "Total Classrooms",
+    "average_students_per_classroom": "Average Students per Classroom",
+    "students_list": "Students List",
+    "full_name": "Full Name",
+    "enter_full_name": "Enter Full Name",
+    "full_name_helper":"Last Name, First Name, Middle Name",
+    "birth_date": "Birth Date",
+    "enter_birth_date": "Enter Birth Date",
+    "date_format_dd_mm_yyyy": "Date Format: DD/MM/YYYY",
+    "classroom": "Classroom",
+    "select_classroom": "Select Classroom",
+    "submit":"Submit",
+    "cancel":"Cancel",
+    "add_student":"Add Student",
+    "close_form":"Close Form"
 }

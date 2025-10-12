@@ -39,16 +39,16 @@ class MainAppp:
             page=self.page,
         )
 
-        # self._setup_screen(self.login_screen.build_page())
+        self._setup_screen(self.login_screen.build_page())
         # For testing purposes, directly show main layout
-        self.app_state.current_user = UserModel(
-            id_user=1,
-            username="admin",
-            email="admin@example.com",
-            password="admin",
-            role_id=1,
-        )
-        self.on_login_success(self.app_state)
+        # self.app_state.current_user = UserModel(
+        #     id_user=1,
+        #     username="admin",
+        #     email="admin@example.com",
+        #     password="admin",
+        #     role_id=1,
+        # )
+        # self.on_login_success(self.app_state)
 
     def _setup_screen(self, screen: Control):
 
@@ -325,6 +325,7 @@ class MainAppp:
 
         elif selected_data == "students":
             self.content_area.content = self.students_screen.build()
+            asyncio.create_task(self.students_screen.on_mount())
         elif selected_data == "payments":
             self.content_area.content = Container(
                 content=Text("Gestion des Paiements en cours de développement")
@@ -406,12 +407,13 @@ async def main(page: Page):
     # # Si la clé n'existe pas, c'est la première ouverture
     # is_first_launch = first_launch_value is None or first_launch_value != "false"
     is_logged_in = False  # For testing purposes
-    is_first_launch = False  # For testing purposes
+    is_first_launch = True  # For testing purposes
 
     # print(f"is_logged_in: {is_logged_in}")
     # print(f"is_first_launch: {is_first_launch}")
 
     page.padding = 0
+    page.title = Constants.APP_NAME + f" v{Constants.VERSION}"
     app = MainAppp(page, is_logged_in, is_first_launch)
     page.update()
 
