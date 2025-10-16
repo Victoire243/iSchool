@@ -98,5 +98,15 @@
     "submit":"Submit",
     "cancel":"Cancel",
     "add_student":"Add Student",
-    "close_form":"Close Form"
+    "close_form":"Close Form",
+    "gender":"Gender",
+    "male":"Male",
+    "female":"Female",
+    "select_gender":"Select Gender",
+    "address":"Address",
+    "enter_address":"Enter Address",
+    "address_helper":"Address of the student",
+    "parent_contact":"Parent Contact",
+    "enter_parent_contact":"Enter Parent Contact",
+    "parent_contact_helper":"Parent contact information for the student"
 }

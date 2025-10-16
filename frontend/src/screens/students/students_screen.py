@@ -141,6 +141,42 @@ class StudentsScreen:
             expand=1,
             helper_text=self.get_text("select_classroom"),
             width=float("inf"),
+            menu_width=200,
+        )
+
+        self.gender_form = Dropdown(
+            label=self.get_text("gender"),
+            border_radius=BorderRadius.all(5),
+            options=[
+                DropdownOption(key="male", text=self.get_text("male")),
+                DropdownOption(key="female", text=self.get_text("female")),
+            ],
+            expand=1,
+            helper_text=self.get_text("select_gender"),
+            width=float("inf"),
+            menu_width=150,
+        )
+
+        self.address_field_form = TextField(
+            label=self.get_text("address"),
+            hint_text=self.get_text("enter_address"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=2,
+            helper=self.get_text("address_helper"),
+            multiline=True,
+        )
+
+        self.parent_contact_field_form = TextField(
+            label=self.get_text("parent_contact"),
+            hint_text=self.get_text("enter_parent_contact"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=2,
+            helper=self.get_text("parent_contact_helper"),
+            multiline=True,
         )
 
         self.button_submit_form = Button(
@@ -185,9 +221,16 @@ class StudentsScreen:
                             self.classroom_form,
                         ],
                         alignment=MainAxisAlignment.SPACE_BETWEEN,
-                        # wrap=True,
                         vertical_alignment=CrossAxisAlignment.CENTER,
-                        # expand=True,
+                    ),
+                    Row(
+                        controls=[
+                            self.gender_form,
+                            self.address_field_form,
+                            self.parent_contact_field_form,
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=CrossAxisAlignment.CENTER,
                     ),
                     Row(
                         controls=[
@@ -209,9 +252,15 @@ class StudentsScreen:
         self.birth_date_field_form.value = "01-01-2000"
         if self.classroom_form.options:
             self.classroom_form.value = self.classroom_form.options[0].key
+        self.gender_form.value = None
+        self.address_field_form.value = ""
+        self.parent_contact_field_form.value = ""
         self.full_name_field_form.update()
         self.birth_date_field_form.update()
         self.classroom_form.update()
+        self.gender_form.update()
+        self.address_field_form.update()
+        self.parent_contact_field_form.update()
 
     def _open_add_form(self, e):
         self.container_form.visible = True

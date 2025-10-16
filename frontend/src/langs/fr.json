@@ -98,5 +98,15 @@
     "submit":"Soumettre",
     "cancel":"Annuler",
     "add_student":"Ajouter un \u00e9l\u00e8ve",
-    "close_form":"Fermer le formulaire"
+    "close_form":"Fermer le formulaire",
+    "gender":"Genre",
+    "male":"Masculin",
+    "female":"F\u00e9minin",
+    "select_gender":"S\u00e9lectionnez le genre",
+    "address":"Adresse",
+    "enter_address":"Entrez l'adresse",
+    "address_helper":"Adresse de l'\u00e9l\u00e8ve",
+    "parent_contact":"Contact des parents",
+    "enter_parent_contact":"Entrez les contacts",
+    "parent_contact_helper":"Les contacts des parents de l'\u00e9l\u00e8ve"
 }
