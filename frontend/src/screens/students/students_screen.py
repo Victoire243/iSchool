@@ -642,7 +642,7 @@ class StudentsScreen:
             filtered = [
                 student
                 for student in filtered
-                if student.gender.lower() == self.selected_gender_filter.lower()
+                if student.gender.lower()[0] == self.selected_gender_filter.lower()[0]
             ]
 
         self.filtered_students = filtered
@@ -782,6 +782,7 @@ class StudentsScreen:
         self.edit_surname_field.value = student.surname
         self.edit_birth_date_field.value = student.date_of_birth
         self.edit_gender_dropdown.value = student.gender.lower()
+        self.edit_gender_dropdown.text = student.gender
         self.edit_address_field.value = student.address
         self.edit_parent_contact_field.value = student.parent_contact
 
@@ -927,7 +928,7 @@ class StudentsScreen:
         full_name = f"{student.last_name} {student.surname} {student.first_name}"
         gender_text = (
             self.get_text("male")
-            if student.gender.lower() == "male"
+            if student.gender.lower().startswith("m")
             else self.get_text("female")
         )
         classroom_name = self._get_classroom_name(student.id_student)
