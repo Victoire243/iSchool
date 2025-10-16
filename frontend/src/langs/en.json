@@ -125,5 +125,16 @@
     "filter_by_gender":"Filter by gender",
     "all_classrooms":"All classrooms",
     "all_genders":"All genders",
-    "filters":"Filters"
+    "filters":"Filters",
+    "edit_student":"Edit Student",
+    "update":"Update",
+    "first_name":"First Name",
+    "enter_first_name":"Enter first name",
+    "last_name":"Last Name",
+    "enter_last_name":"Enter last name",
+    "surname":"Surname",
+    "enter_surname":"Enter surname",
+    "close":"Close",
+    "student_updated":"Student updated successfully",
+    "error_updating_student":"Error updating student"
 }

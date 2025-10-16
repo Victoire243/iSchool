@@ -26,6 +26,7 @@ class StudentsScreen:
         self.build_components()
         self._build_add_form_components()
         self._build_table_components()
+        self._build_edit_dialog()
 
     async def on_mount(self):
         self.translations = self.app_state.translations
@@ -431,6 +432,173 @@ class StudentsScreen:
             **self.get_box_style(),
         )
 
+    def _build_edit_dialog(self):
+        """Build the edit student dialog"""
+        # Create form fields for edit dialog
+        self.edit_first_name_field = TextField(
+            label=self.get_text("first_name"),
+            hint_text=self.get_text("enter_first_name"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_last_name_field = TextField(
+            label=self.get_text("last_name"),
+            hint_text=self.get_text("enter_last_name"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_surname_field = TextField(
+            label=self.get_text("surname"),
+            hint_text=self.get_text("enter_surname"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_birth_date_field = TextField(
+            label=self.get_text("birth_date"),
+            hint_text=self.get_text("enter_birth_date"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            keyboard_type=KeyboardType.DATETIME,
+            expand=1,
+        )
+
+        self.edit_gender_dropdown = Dropdown(
+            label=self.get_text("gender"),
+            border_radius=BorderRadius.all(5),
+            options=[
+                DropdownOption(key="male", text=self.get_text("male")),
+                DropdownOption(key="female", text=self.get_text("female")),
+            ],
+            expand=1,
+            width=float("inf"),
+            menu_width=150,
+        )
+
+        self.edit_classroom_dropdown = Dropdown(
+            label=self.get_text("classroom"),
+            border_radius=BorderRadius.all(5),
+            options=[],
+            expand=1,
+            width=float("inf"),
+            menu_width=250,
+        )
+
+        self.edit_address_field = TextField(
+            label=self.get_text("address"),
+            hint_text=self.get_text("enter_address"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            multiline=True,
+            min_lines=2,
+            max_lines=3,
+            expand=1,
+        )
+
+        self.edit_parent_contact_field = TextField(
+            label=self.get_text("parent_contact"),
+            hint_text=self.get_text("enter_parent_contact"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            multiline=True,
+            min_lines=2,
+            max_lines=3,
+            expand=1,
+        )
+
+        # Create the dialog
+        self.edit_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("edit_student"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.PRIMARY_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Row(
+                            controls=[
+                                self.edit_first_name_field,
+                                self.edit_last_name_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Row(
+                            controls=[
+                                self.edit_surname_field,
+                                self.edit_birth_date_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Row(
+                            controls=[
+                                self.edit_gender_dropdown,
+                                self.edit_classroom_dropdown,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Row(
+                            controls=[
+                                self.edit_address_field,
+                                self.edit_parent_contact_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                    ],
+                    spacing=15,
+                    tight=True,
+                ),
+                width=600,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_edit_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("update")),
+                    on_click=self._save_student_changes,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
     def _apply_filters(self):
         """Apply search and filters to students data"""
         if not self.students_data:
@@ -575,13 +743,7 @@ class StudentsScreen:
         """Handle edit student button click"""
 
         def handler(e):
-            # TODO: Implement edit functionality
-            print(f"Edit student {student_id}")
-            # self.page.show_snack_bar(
-            #     SnackBar(
-            #         content=Text(f"Édition de l'élève {student_id} (à implémenter)")
-            #     )
-            # )
+            self._open_edit_dialog(student_id)
 
         return handler
 
@@ -598,6 +760,111 @@ class StudentsScreen:
             # )
 
         return handler
+
+    def _open_edit_dialog(self, student_id: int):
+        """Open edit dialog and populate with student data"""
+        # Find the student
+        student = None
+        for s in self.students_data:
+            if s.id_student == student_id:
+                student = s
+                break
+
+        if not student:
+            return
+
+        # Store the current student being edited
+        self.current_editing_student_id = student_id
+
+        # Populate form fields
+        self.edit_first_name_field.value = student.first_name
+        self.edit_last_name_field.value = student.last_name
+        self.edit_surname_field.value = student.surname
+        self.edit_birth_date_field.value = student.date_of_birth
+        self.edit_gender_dropdown.value = student.gender.lower()
+        self.edit_address_field.value = student.address
+        self.edit_parent_contact_field.value = student.parent_contact
+
+        # Populate classroom dropdown
+        classroom_options = [
+            DropdownOption(key=str(c.id_classroom), text=c.name)
+            for c in self.classrooms_data
+        ]
+        self.edit_classroom_dropdown.options = classroom_options
+
+        # Find and set the current classroom
+        current_classroom_id = None
+        for enrollment in self.enrollments_data:
+            if enrollment.student_id == student_id:
+                current_classroom_id = enrollment.classroom_id
+                break
+
+        if current_classroom_id:
+            self.edit_classroom_dropdown.value = str(current_classroom_id)
+
+        # Open the dialog
+        self.page.show_dialog(self.edit_dialog)
+        self.page.update()
+
+    def _close_edit_dialog(self, e=None):
+        """Close the edit dialog"""
+        self.edit_dialog.open = False
+        self.page.update()
+
+    async def _save_student_changes(self, e):
+        """Save changes to the student"""
+        try:
+            # Get updated values
+            updated_student = StudentModel(
+                id_student=self.current_editing_student_id,
+                first_name=self.edit_first_name_field.value.strip(),
+                last_name=self.edit_last_name_field.value.strip(),
+                surname=self.edit_surname_field.value.strip(),
+                gender=self.edit_gender_dropdown.value,
+                date_of_birth=self.edit_birth_date_field.value.strip(),
+                address=self.edit_address_field.value.strip(),
+                parent_contact=self.edit_parent_contact_field.value.strip(),
+            )
+
+            # TODO: Call API to update student
+            # success = await self.services.update_student(updated_student)
+
+            # For now, update locally
+            for i, student in enumerate(self.students_data):
+                if student.id_student == self.current_editing_student_id:
+                    self.students_data[i] = updated_student
+                    break
+
+            # Update enrollment if classroom changed
+            selected_classroom_id = int(self.edit_classroom_dropdown.value)
+            for enrollment in self.enrollments_data:
+                if enrollment.student_id == self.current_editing_student_id:
+                    enrollment.classroom_id = selected_classroom_id
+                    break
+
+            # Close dialog
+            self._close_edit_dialog()
+
+            # Refresh the table
+            self._apply_filters()
+            self._update_table()
+
+            # Show success message
+            self.page.show_snack_bar(
+                SnackBar(
+                    content=Text(self.get_text("student_updated")),
+                    bgcolor=Colors.GREEN,
+                )
+            )
+
+        except Exception as ex:
+            print(f"Error updating student: {ex}")
+            self.page.show_snack_bar(
+                SnackBar(
+                    content=Text(self.get_text("error_updating_student")),
+                    bgcolor=Colors.RED,
+                )
+            )
 
     def _create_table_header(self):
         """Create table header row"""

@@ -125,5 +125,16 @@
     "filter_by_gender":"Filtrer par genre",
     "all_classrooms":"Toutes les classes",
     "all_genders":"Tous les genres",
-    "filters":"Filtres"
+    "filters":"Filtres",
+    "edit_student":"Modifier l'\u00e9l\u00e8ve",
+    "update":"Mettre \u00e0 jour",
+    "first_name":"Pr\u00e9nom",
+    "enter_first_name":"Entrez le pr\u00e9nom",
+    "last_name":"Nom de famille",
+    "enter_last_name":"Entrez le nom de famille",
+    "surname":"Post-nom",
+    "enter_surname":"Entrez le post-nom",
+    "close":"Fermer",
+    "student_updated":"L'\u00e9l\u00e8ve a \u00e9t\u00e9 modifi\u00e9 avec succ\u00e8s",
+    "error_updating_student":"Erreur lors de la modification de l'\u00e9l\u00e8ve"
 }
