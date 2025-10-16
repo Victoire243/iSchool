@@ -39,7 +39,7 @@ class WelcomeScreen:
         self.page = page
 
     def get_text(self, key: str) -> str:
-        return self.translations.get(key, "XXXXXXXXXXX")
+        return self.translations.get(key, key)
 
     def to_next_page(self, page_number: int):
         if page_number == 1:

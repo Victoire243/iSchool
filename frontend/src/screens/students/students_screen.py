@@ -1,5 +1,3 @@
-from json import load
-from math import e, exp
 from flet import *  # type: ignore
 from core import AppState, Constants
 from utils import Utils

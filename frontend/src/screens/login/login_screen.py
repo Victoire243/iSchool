@@ -180,7 +180,7 @@ class LoginScreen:
         self.container.update()
 
     def get_text(self, key: str):
-        return self.translations.get(key, "Xxxxxxxxxxxxx")
+        return self.translations.get(key, key)
 
     def build_page(self) -> Control:
         return Stack(

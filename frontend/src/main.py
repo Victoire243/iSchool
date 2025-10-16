@@ -57,7 +57,7 @@ class MainAppp:
         self.page.controls = [SafeArea(content=screen, expand=True)]
 
     def get_text(self, key: str):
-        return self.app_state.translations.get(key, "Xxxxxxxxxxxxx")
+        return self.app_state.translations.get(key, key)
 
     def on_logout(self, e):
         self.app_state.current_user = None
