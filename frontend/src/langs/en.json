@@ -140,5 +140,5 @@
     "motive":"Motive",
     "enter_motive":"Enter motive",
     "delete_student":"Delete Student",
-    "confirm_delete_student":"Confirm deletion of the student.\nThis action is irreversible."
+    "confirm_delete_student":"Confirm deletion of the student while entering the motive for its deletion.\nThis action is irreversible."
 }
