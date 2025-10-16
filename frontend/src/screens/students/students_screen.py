@@ -3,7 +3,7 @@ from core import AppState, Constants
 from utils import Utils
 import asyncio
 from .students_services import StudentsServices
-from models import ClassroomModel
+from models import ClassroomModel, StudentModel, EnrollmentModel
 
 
 class StudentsScreen:
@@ -13,8 +13,19 @@ class StudentsScreen:
         self.services = StudentsServices(app_state)
         self.page = page
 
+        # Pagination and search state
+        self.students_data = []
+        self.classrooms_data = []
+        self.filtered_students = []
+        self.current_page = 1
+        self.items_per_page = 10
+        self.search_query = ""
+        self.selected_classroom_filter = "all"
+        self.selected_gender_filter = "all"
+
         self.build_components()
         self._build_add_form_components()
+        self._build_table_components()
 
     async def on_mount(self):
         self.translations = self.app_state.translations
@@ -37,17 +48,38 @@ class StudentsScreen:
     async def load_data(self):
         students_status, students_data = await self.services.load_students_data()
         classrooms_status, classrooms_data = await self.services.load_classrooms_data()
-        # students_per_classroom_status, students_per_classroom_data = (
-        #     await self.services.load_students_per_classroom_data()
-        # )
-        # await asyncio.sleep(2)  # Simuler un délai de chargement
+        enrollments_status, enrollments_data = (
+            await self.services.load_enrollments_data()
+        )
+
+        # Store data
+        self.students_data = students_data if students_status else []
+        self.classrooms_data = classrooms_data if classrooms_status else []
+        self.enrollments_data = enrollments_data if enrollments_status else []
+
+        # Reset pagination and filters
+        self.current_page = 1
+        self.search_query = ""
+        self.search_field.value = ""
+        self.selected_classroom_filter = "all"
+        self.selected_gender_filter = "all"
+
+        # Update filter dropdowns
+        self._update_classroom_filter_options()
+        if hasattr(self, "classroom_filter_dropdown"):
+            self.classroom_filter_dropdown.value = "all"
+        if hasattr(self, "gender_filter_dropdown"):
+            self.gender_filter_dropdown.value = "all"
+
+        # Filter students
+        self._apply_filters()
+
         self.main_content.content = Column(
             expand=True,
             horizontal_alignment=CrossAxisAlignment.STRETCH,
             scroll=ScrollMode.AUTO,
             controls=[
                 Row(
-                    # scroll=ScrollMode.AUTO,
                     alignment=MainAxisAlignment.SPACE_BETWEEN,
                     spacing=20,
                     controls=[
@@ -90,12 +122,16 @@ class StudentsScreen:
                         color=Constants.PRIMARY_COLOR,
                     ),
                     margin=Margin(top=20, bottom=10),
-                    expand=True,
                 ),
+                self.search_and_pagination_container,
+                self.students_table_container,
             ],
         )
         if classrooms_status:
             self.propagate_classrooms(classrooms_data)
+
+        self._update_table()
+
         try:
             self.main_content.update()
         except Exception as e:
@@ -282,6 +318,469 @@ class StudentsScreen:
         self._clear_form()
         self.add_button.update()
         self.container_form.update()
+
+    def _build_table_components(self):
+        """Build the students table and pagination components"""
+        self.search_field = TextField(
+            hint_text=self.get_text("search_by_name"),
+            prefix_icon=Icons.SEARCH,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            on_change=self._on_search_change,
+            expand=True,
+        )
+
+        self.classroom_filter_dropdown = Dropdown(
+            label=self.get_text("filter_by_classroom"),
+            value="all",
+            options=[
+                DropdownOption(key="all", text=self.get_text("all_classrooms")),
+            ],
+            width=200,
+            on_change=self._on_classroom_filter_change,
+        )
+
+        self.gender_filter_dropdown = Dropdown(
+            label=self.get_text("filter_by_gender"),
+            value="all",
+            options=[
+                DropdownOption(key="all", text=self.get_text("all_genders")),
+                DropdownOption(key="male", text=self.get_text("male")),
+                DropdownOption(key="female", text=self.get_text("female")),
+            ],
+            width=150,
+            on_change=self._on_gender_filter_change,
+        )
+
+        self.items_per_page_dropdown = Dropdown(
+            label=self.get_text("items_per_page"),
+            value="10",
+            options=[
+                DropdownOption(key="5", text="5"),
+                DropdownOption(key="10", text="10"),
+                DropdownOption(key="20", text="20"),
+                DropdownOption(key="50", text="50"),
+            ],
+            width=150,
+            on_change=self._on_items_per_page_change,
+        )
+
+        self.page_info_text = Text(
+            value="",
+            size=14,
+            color=Constants.PRIMARY_COLOR,
+        )
+
+        self.prev_page_button = IconButton(
+            icon=Icons.ARROW_BACK,
+            icon_color=Constants.PRIMARY_COLOR,
+            tooltip=self.get_text("previous"),
+            on_click=self._go_to_prev_page,
+            disabled=True,
+        )
+
+        self.next_page_button = IconButton(
+            icon=Icons.ARROW_FORWARD,
+            icon_color=Constants.PRIMARY_COLOR,
+            tooltip=self.get_text("next"),
+            on_click=self._go_to_next_page,
+            disabled=True,
+        )
+
+        self.search_and_pagination_container = Container(
+            content=Column(
+                controls=[
+                    Row(
+                        controls=[
+                            self.search_field,
+                            self.classroom_filter_dropdown,
+                            self.gender_filter_dropdown,
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=CrossAxisAlignment.CENTER,
+                        spacing=10,
+                    ),
+                    Row(
+                        controls=[
+                            self.items_per_page_dropdown,
+                            Row(
+                                controls=[
+                                    self.prev_page_button,
+                                    self.page_info_text,
+                                    self.next_page_button,
+                                ],
+                                alignment=MainAxisAlignment.END,
+                            ),
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=CrossAxisAlignment.CENTER,
+                    ),
+                ],
+                spacing=10,
+            ),
+            padding=Padding.all(10),
+            **self.get_box_style(),
+        )
+
+        self.students_table_container = Container(
+            content=Column(
+                controls=[],
+                scroll=ScrollMode.AUTO,
+            ),
+            padding=Padding.all(10),
+            **self.get_box_style(),
+        )
+
+    def _apply_filters(self):
+        """Apply search and filters to students data"""
+        if not self.students_data:
+            self.filtered_students = []
+            return
+
+        query = self.search_query.lower().strip()
+
+        # Start with all students
+        filtered = self.students_data.copy()
+
+        # Apply text search filter
+        if query:
+            filtered = [
+                student
+                for student in filtered
+                if (
+                    query in student.first_name.lower()
+                    or query in student.last_name.lower()
+                    or query in student.surname.lower()
+                )
+            ]
+
+        # Apply classroom filter
+        if self.selected_classroom_filter != "all":
+            classroom_id = int(self.selected_classroom_filter)
+            # Get students enrolled in the selected classroom
+            enrolled_student_ids = [
+                enrollment.student_id
+                for enrollment in self.enrollments_data
+                if enrollment.classroom_id == classroom_id
+            ]
+            filtered = [
+                student
+                for student in filtered
+                if student.id_student in enrolled_student_ids
+            ]
+
+        # Apply gender filter
+        if self.selected_gender_filter != "all":
+            filtered = [
+                student
+                for student in filtered
+                if student.gender.lower() == self.selected_gender_filter.lower()
+            ]
+
+        self.filtered_students = filtered
+
+    def _update_classroom_filter_options(self):
+        """Update classroom filter dropdown options"""
+        if not hasattr(self, "classroom_filter_dropdown"):
+            return
+
+        options = [
+            DropdownOption(key="all", text=self.get_text("all_classrooms")),
+        ]
+
+        for classroom in self.classrooms_data:
+            options.append(
+                DropdownOption(key=str(classroom.id_classroom), text=classroom.name)
+            )
+
+        self.classroom_filter_dropdown.options = options
+
+    def _on_search_change(self, e):
+        """Handle search field change"""
+        self.search_query = e.control.value
+        self.current_page = 1
+        self._apply_filters()
+        self._update_table()
+
+    def _on_classroom_filter_change(self, e):
+        """Handle classroom filter change"""
+        self.selected_classroom_filter = e.control.value
+        self.current_page = 1
+        self._apply_filters()
+        self._update_table()
+
+    def _on_gender_filter_change(self, e):
+        """Handle gender filter change"""
+        self.selected_gender_filter = e.control.value
+        self.current_page = 1
+        self._apply_filters()
+        self._update_table()
+
+    def _on_items_per_page_change(self, e):
+        """Handle items per page dropdown change"""
+        self.items_per_page = int(e.control.value)
+        self.current_page = 1
+        self._update_table()
+
+    def _go_to_prev_page(self, e):
+        """Go to previous page"""
+        if self.current_page > 1:
+            self.current_page -= 1
+            self._update_table()
+
+    def _go_to_next_page(self, e):
+        """Go to next page"""
+        total_pages = self._get_total_pages()
+        if self.current_page < total_pages:
+            self.current_page += 1
+            self._update_table()
+
+    def _get_total_pages(self):
+        """Calculate total number of pages"""
+        if not self.filtered_students:
+            return 1
+        return max(
+            1,
+            (len(self.filtered_students) + self.items_per_page - 1)
+            // self.items_per_page,
+        )
+
+    def _get_paginated_students(self):
+        """Get students for current page"""
+        start_idx = (self.current_page - 1) * self.items_per_page
+        end_idx = start_idx + self.items_per_page
+        return self.filtered_students[start_idx:end_idx]
+
+    def _get_classroom_name(self, student_id) -> str:
+        """Get classroom name for a student"""
+        for enrollment in self.enrollments_data:
+            if enrollment.student_id == student_id:
+                for classroom in self.classrooms_data:
+                    if classroom.id_classroom == enrollment.classroom_id:
+                        return classroom.name
+        return "N/A"
+
+    def _get_birth_year(self, date_of_birth: str) -> str:
+        """Extract birth year from date string"""
+        try:
+            # Assuming date format is YY-MM-DD
+            parts = date_of_birth.replace("/", "-").split("-")
+            if len(parts) == 3:
+                return parts[0]  # Year is the first part
+        except:
+            pass
+        return "N/A"
+
+    def _on_edit_student(self, student_id):
+        """Handle edit student button click"""
+
+        def handler(e):
+            # TODO: Implement edit functionality
+            print(f"Edit student {student_id}")
+            # self.page.show_snack_bar(
+            #     SnackBar(
+            #         content=Text(f"Édition de l'élève {student_id} (à implémenter)")
+            #     )
+            # )
+
+        return handler
+
+    def _on_delete_student(self, student_id):
+        """Handle delete student button click"""
+
+        def handler(e):
+            # TODO: Implement delete functionality
+            print(f"Delete student {student_id}")
+            # self.page.show_snack_bar(
+            #     SnackBar(
+            #         content=Text(f"Suppression de l'élève {student_id} (à implémenter)")
+            #     )
+            # )
+
+        return handler
+
+    def _create_table_header(self):
+        """Create table header row"""
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(
+                            self.get_text("full_name"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("gender"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=1,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("classroom"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("year_of_birth"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=1,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("actions"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                ],
+            ),
+            bgcolor=Constants.PRIMARY_COLOR,
+            border_radius=BorderRadius.only(top_left=10, top_right=10),
+        )
+
+    def _create_table_row(self, student: StudentModel, index):
+        """Create a table row for a student"""
+        full_name = f"{student.last_name} {student.surname} {student.first_name}"
+        gender_text = (
+            self.get_text("male")
+            if student.gender.lower() == "male"
+            else self.get_text("female")
+        )
+        classroom_name = self._get_classroom_name(student.id_student)
+        birth_year = self._get_birth_year(student.date_of_birth)
+
+        row_color = "#f8faff" if index % 2 == 0 else "#ffffff"
+
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(full_name, size=14),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(gender_text, size=14),
+                        expand=1,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(classroom_name, size=14),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(birth_year, size=14),
+                        expand=1,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Row(
+                            controls=[
+                                IconButton(
+                                    icon=Icons.EDIT,
+                                    icon_color=Constants.PRIMARY_COLOR,
+                                    tooltip=self.get_text("edit"),
+                                    on_click=self._on_edit_student(student.id_student),
+                                ),
+                                IconButton(
+                                    icon=Icons.DELETE,
+                                    icon_color=Constants.CANCEL_COLOR,
+                                    tooltip=self.get_text("delete"),
+                                    on_click=self._on_delete_student(
+                                        student.id_student
+                                    ),
+                                ),
+                            ],
+                            spacing=5,
+                        ),
+                        expand=2,
+                        padding=Padding.all(5),
+                    ),
+                ],
+            ),
+            bgcolor=row_color,
+        )
+
+    def _update_table(self):
+        """Update the students table with current data"""
+        total_pages = self._get_total_pages()
+        paginated_students = self._get_paginated_students()
+
+        # Update pagination info
+        start_item = (self.current_page - 1) * self.items_per_page + 1
+        end_item = min(
+            self.current_page * self.items_per_page, len(self.filtered_students)
+        )
+        self.page_info_text.value = f"{self.get_text('page')} {self.current_page} {self.get_text('of')} {total_pages} ({start_item}-{end_item} / {len(self.filtered_students)})"
+
+        # Update pagination buttons
+        self.prev_page_button.disabled = self.current_page <= 1
+        self.next_page_button.disabled = self.current_page >= total_pages
+
+        # Build table content
+        table_controls = [self._create_table_header()]
+
+        if not paginated_students:
+            # No students found message
+            table_controls.append(
+                Container(
+                    content=Column(
+                        controls=[
+                            Icon(Icons.SEARCH_OFF, size=60, color=Colors.GREY_400),
+                            Text(
+                                self.get_text("no_students_found"),
+                                size=18,
+                                weight=FontWeight.BOLD,
+                                color=Colors.GREY_600,
+                            ),
+                            Text(
+                                self.get_text("no_students_message"),
+                                size=14,
+                                color=Colors.GREY_500,
+                            ),
+                        ],
+                        horizontal_alignment=CrossAxisAlignment.CENTER,
+                        spacing=10,
+                    ),
+                    padding=Padding.all(40),
+                    alignment=Alignment(0, 0),
+                )
+            )
+        else:
+            # Add student rows
+            for index, student in enumerate(paginated_students):
+                table_controls.append(self._create_table_row(student, index))
+
+        self.students_table_container.content = Column(
+            controls=table_controls,
+            scroll=ScrollMode.AUTO,
+            spacing=0,
+        )
+
+        try:
+            self.search_and_pagination_container.update()
+            self.students_table_container.update()
+        except Exception as e:
+            # print("Error updating table:", e)
+            pass
 
     def create_stat_card(
         self, title: str, value: str, icon: str, color: str, subtitle: str = None

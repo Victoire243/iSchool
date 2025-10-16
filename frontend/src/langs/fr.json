@@ -108,5 +108,22 @@
     "address_helper":"Adresse de l'\u00e9l\u00e8ve",
     "parent_contact":"Contact des parents",
     "enter_parent_contact":"Entrez les contacts",
-    "parent_contact_helper":"Les contacts des parents de l'\u00e9l\u00e8ve"
+    "parent_contact_helper":"Les contacts des parents de l'\u00e9l\u00e8ve",
+    "refresh":"Actualiser",
+    "actions":"Actions",
+    "edit":"Modifier",
+    "delete":"Supprimer",
+    "search_student":"Rechercher un \u00e9l\u00e8ve",
+    "search_by_name":"Rechercher par nom...",
+    "year_of_birth":"Ann\u00e9e de naissance",
+    "items_per_page":"\u00c9l\u00e8ves par page",
+    "page":"Page",
+    "of":"de",
+    "no_students_found":"Aucun \u00e9l\u00e8ve trouv\u00e9",
+    "no_students_message":"Aucun \u00e9l\u00e8ve ne correspond \u00e0 votre recherche",
+    "filter_by_classroom":"Filtrer par classe",
+    "filter_by_gender":"Filtrer par genre",
+    "all_classrooms":"Toutes les classes",
+    "all_genders":"Tous les genres",
+    "filters":"Filtres"
 }

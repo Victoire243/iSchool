@@ -17,3 +17,7 @@ class StudentsServices:
     async def load_classrooms_data(self):
         # await asyncio.sleep(2)  # Simulate network delay
         return (True, await self.app_state.api_client.list_classrooms())
+
+    async def load_enrollments_data(self):
+        # await asyncio.sleep(2)  # Simulate network delay
+        return (True, await self.app_state.api_client.list_enrollments())

@@ -108,5 +108,22 @@
     "address_helper":"Address of the student",
     "parent_contact":"Parent Contact",
     "enter_parent_contact":"Enter Parent Contact",
-    "parent_contact_helper":"Parent contact information for the student"
+    "parent_contact_helper":"Parent contact information for the student",
+    "refresh":"Refresh",
+    "actions":"Actions",
+    "edit":"Edit",
+    "delete":"Supprimer",
+    "search_student":"Search Student",
+    "search_by_name":"Search by name...",
+    "year_of_birth":"Year of Birth",
+    "items_per_page":"Students per page",
+    "page":"Page",
+    "of":"of",
+    "no_students_found":"No students found",
+    "no_students_message":"No students match your search",
+    "filter_by_classroom":"Filter by classroom",
+    "filter_by_gender":"Filter by gender",
+    "all_classrooms":"All classrooms",
+    "all_genders":"All genders",
+    "filters":"Filters"
 }
