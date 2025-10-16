@@ -136,5 +136,9 @@
     "enter_surname":"Entrez le post-nom",
     "close":"Fermer",
     "student_updated":"L'\u00e9l\u00e8ve a \u00e9t\u00e9 modifi\u00e9 avec succ\u00e8s",
-    "error_updating_student":"Erreur lors de la modification de l'\u00e9l\u00e8ve"
+    "error_updating_student":"Erreur lors de la modification de l'\u00e9l\u00e8ve",
+    "motive":"Motif",
+    "enter_motive":"Entrez le motif",
+    "delete_student":"Supprimer l'\u00e9l\u00e8ve",
+    "confirm_delete_student":"Confirmer la suppression de l'\u00e9l\u00e8ve.\nL'action est irr\u00e9versible."
 }

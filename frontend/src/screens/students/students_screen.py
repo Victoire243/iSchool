@@ -27,6 +27,7 @@ class StudentsScreen:
         self._build_add_form_components()
         self._build_table_components()
         self._build_edit_dialog()
+        self._build_delete_dialog()
 
     async def on_mount(self):
         self.translations = self.app_state.translations
@@ -599,6 +600,87 @@ class StudentsScreen:
             actions_alignment=MainAxisAlignment.END,
         )
 
+    def _build_delete_dialog(self):
+
+        self.motive_field = TextField(
+            label=self.get_text("motive"),
+            hint_text=self.get_text("enter_motive"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=True,
+            multiline=True,
+            min_lines=2,
+            max_lines=5,
+        )
+
+        self.student_name_to_be_deleted = Text(
+            value="",
+            weight=FontWeight.BOLD,
+        )
+
+        self.delete_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("delete_student"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.CANCEL_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text(
+                            self.get_text("confirm_delete_student"),
+                            size=14,
+                            color=Constants.PRIMARY_COLOR,
+                        ),
+                        self.student_name_to_be_deleted,
+                        self.motive_field,
+                    ],
+                    spacing=15,
+                    tight=True,
+                    horizontal_alignment=CrossAxisAlignment.STRETCH,
+                ),
+                width=400,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_delete_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("delete")),
+                    on_click=self._confirm_delete_student,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
     def _apply_filters(self):
         """Apply search and filters to students data"""
         if not self.students_data:
@@ -739,42 +821,13 @@ class StudentsScreen:
             pass
         return "N/A"
 
-    def _on_edit_student(self, student_id):
-        """Handle edit student button click"""
-
-        def handler(e):
-            self._open_edit_dialog(student_id)
-
-        return handler
-
-    def _on_delete_student(self, student_id):
-        """Handle delete student button click"""
-
-        def handler(e):
-            # TODO: Implement delete functionality
-            print(f"Delete student {student_id}")
-            # self.page.show_snack_bar(
-            #     SnackBar(
-            #         content=Text(f"Suppression de l'élève {student_id} (à implémenter)")
-            #     )
-            # )
-
-        return handler
-
-    def _open_edit_dialog(self, student_id: int):
+    def _open_edit_dialog(self, student: StudentModel):
         """Open edit dialog and populate with student data"""
-        # Find the student
-        student = None
-        for s in self.students_data:
-            if s.id_student == student_id:
-                student = s
-                break
-
         if not student:
             return
 
         # Store the current student being edited
-        self.current_editing_student_id = student_id
+        self.current_editing_student_id = student.id_student
 
         # Populate form fields
         self.edit_first_name_field.value = student.first_name
@@ -796,7 +849,7 @@ class StudentsScreen:
         # Find and set the current classroom
         current_classroom_id = None
         for enrollment in self.enrollments_data:
-            if enrollment.student_id == student_id:
+            if enrollment.student_id == student.id_student:
                 current_classroom_id = enrollment.classroom_id
                 break
 
@@ -807,10 +860,49 @@ class StudentsScreen:
         self.page.show_dialog(self.edit_dialog)
         self.page.update()
 
+    def _open_delete_dialog(self, student: StudentModel):
+        """Open delete dialog and populate with student data"""
+        if not student:
+            return
+
+        # Store the current student being deleted
+        self.current_deleting_student_id = student.id_student
+
+        # Set the student name in the dialog
+        full_name = f"{student.last_name} {student.surname} {student.first_name}"
+        self.student_name_to_be_deleted.value = full_name
+
+        if not student:
+            return
+
+        # Store the current student being deleted
+        self.current_deleting_student_id = student.id_student
+
+        # Set the student name in the dialog
+        full_name = f"{student.last_name} {student.surname} {student.first_name}"
+        self.student_name_to_be_deleted.value = full_name
+
+        # Clear motive field
+        self.motive_field.value = ""
+
+        # Open the dialog
+        self.page.show_dialog(self.delete_dialog)
+        self.page.update()
+
     def _close_edit_dialog(self, e=None):
         """Close the edit dialog"""
         self.edit_dialog.open = False
         self.page.update()
+
+    def _close_delete_dialog(self, e=None):
+        """Close the delete dialog"""
+        self.delete_dialog.open = False
+        self.page.update()
+
+    async def _confirm_delete_student(self, e):
+        """Confirm deletion of the student"""
+        # TODO implementation here
+        self._close_delete_dialog()
 
     async def _save_student_changes(self, e):
         """Save changes to the student"""
@@ -850,13 +942,13 @@ class StudentsScreen:
             self._apply_filters()
             self._update_table()
 
-            # Show success message
-            self.page.show_snack_bar(
-                SnackBar(
-                    content=Text(self.get_text("student_updated")),
-                    bgcolor=Colors.GREEN,
-                )
-            )
+            # # Show success message
+            # self.page.show_snack_bar(
+            #     SnackBar(
+            #         content=Text(self.get_text("student_updated")),
+            #         bgcolor=Colors.GREEN,
+            #     )
+            # )
 
         except Exception as ex:
             print(f"Error updating student: {ex}")
@@ -966,14 +1058,16 @@ class StudentsScreen:
                                     icon=Icons.EDIT,
                                     icon_color=Constants.PRIMARY_COLOR,
                                     tooltip=self.get_text("edit"),
-                                    on_click=self._on_edit_student(student.id_student),
+                                    on_click=lambda e, s=student: self._open_edit_dialog(
+                                        s
+                                    ),
                                 ),
                                 IconButton(
                                     icon=Icons.DELETE,
                                     icon_color=Constants.CANCEL_COLOR,
                                     tooltip=self.get_text("delete"),
-                                    on_click=self._on_delete_student(
-                                        student.id_student
+                                    on_click=lambda e, s=student: self._open_delete_dialog(
+                                        s
                                     ),
                                 ),
                             ],
