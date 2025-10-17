@@ -155,5 +155,8 @@
     "enter_payment_date":"Entrez la date du paiement",
     "date_format_yyyy_mm_dd":"Format de date : AAAA-MM-JJ",
     "filter_by_payment_type":"Filtrer par type de paiement",
-    "all_types":"Tous les types"
+    "all_types":"Tous les types",
+    "total_amount":"Montant total",
+    "average_payment":"Paiement moyen",
+    "payments_list":"Liste des paiements"
 }

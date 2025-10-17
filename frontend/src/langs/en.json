@@ -155,5 +155,8 @@
     "enter_payment_date":"Enter payment date",
     "date_format_yyyy_mm_dd":"Date Format: YYYY-MM-DD",
     "filter_by_payment_type":"Filter by payment type",
-    "all_types":"All types"
+    "all_types":"All types",
+    "total_amount":"Total Amount",
+    "average_payment":"Average Payment",
+    "payments_list":"Payments List"
 }
