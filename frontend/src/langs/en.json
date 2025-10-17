@@ -142,5 +142,18 @@
     "delete_student":"Delete Student",
     "confirm_delete_student":"Confirm deletion of the student while entering the motive for its deletion.\nThis action is irreversible.",
     "payment_management": "Payment Management",
-    "add_payment":"Add Payment"
+    "add_payment":"Add Payment",
+    "search_by_student":"Search by student...",
+    "enter_student_name":"Enter student name",
+    "clear":"Clear",
+    "payment_type":"Payment Type",
+    "select_payment_type":"Select Payment Type",
+    "amount":"Amount",
+    "enter_amount":"Enter amount",
+    "amount_helper":"Payment amount in FC",
+    "payment_date":"Payment Date",
+    "enter_payment_date":"Enter payment date",
+    "date_format_yyyy_mm_dd":"Date Format: YYYY-MM-DD",
+    "filter_by_payment_type":"Filter by payment type",
+    "all_types":"All types"
 }

@@ -142,5 +142,18 @@
     "delete_student":"Supprimer l'\u00e9l\u00e8ve",
     "confirm_delete_student":"Confirmer la suppression de l'\u00e9l\u00e8ve tout en entrant le motif de sa suppression.\nL'action est irr\u00e9versible.",
     "payment_management": "Gestion des paiements",
-    "add_payment":"Ajouter un paiement"
+    "add_payment":"Ajouter un paiement",
+    "search_by_student":"Rechercher par \u00e9l\u00e8ve...",
+    "enter_student_name":"Entrez le nom de l'\u00e9l\u00e8ve",
+    "clear":"Effacer",
+    "payment_type":"Type de paiement",
+    "select_payment_type":"S\u00e9lectionnez le type de paiement",
+    "amount":"Montant",
+    "enter_amount":"Entrez le montant",
+    "amount_helper":"Montant du paiement en FC",
+    "payment_date":"Date du paiement",
+    "enter_payment_date":"Entrez la date du paiement",
+    "date_format_yyyy_mm_dd":"Format de date : AAAA-MM-JJ",
+    "filter_by_payment_type":"Filtrer par type de paiement",
+    "all_types":"Tous les types"
 }
