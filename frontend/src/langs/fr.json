@@ -140,5 +140,7 @@
     "motive":"Motif",
     "enter_motive":"Entrez le motif",
     "delete_student":"Supprimer l'\u00e9l\u00e8ve",
-    "confirm_delete_student":"Confirmer la suppression de l'\u00e9l\u00e8ve tout en entrant le motif de sa suppression.\nL'action est irr\u00e9versible."
+    "confirm_delete_student":"Confirmer la suppression de l'\u00e9l\u00e8ve tout en entrant le motif de sa suppression.\nL'action est irr\u00e9versible.",
+    "payment_management": "Gestion des paiements",
+    "add_payment":"Ajouter un paiement"
 }
