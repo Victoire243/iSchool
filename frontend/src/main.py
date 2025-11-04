@@ -6,7 +6,13 @@ from flet import *  # type: ignore
 
 # Imports des modules locaux
 from core import AppState, Constants
-from screens import LoginScreen, DashboardScreen, StudentsScreen, PaymentScreen
+from screens import (
+    LoginScreen,
+    DashboardScreen,
+    StudentsScreen,
+    PaymentScreen,
+    AdminScreen,
+)
 from models import UserModel
 
 
@@ -43,6 +49,8 @@ class MainAppp:
             app_state=self.app_state,
             page=self.page,
         )
+
+        self.admin_screen = AdminScreen(app_state=self.app_state, page=self.page)
 
         # self._setup_screen(self.login_screen.build_page())
         # For testing purposes, directly show main layout
@@ -347,9 +355,8 @@ class MainAppp:
             )
 
         elif selected_data == "admin":
-            self.content_area.content = Container(
-                content=Text("Administration en cours de développement")
-            )
+            self.content_area.content = self.admin_screen.build()
+            asyncio.create_task(self.admin_screen.on_mount())
 
         self.content_area.update()
 

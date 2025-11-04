@@ -158,5 +158,8 @@
     "all_types":"All types",
     "total_amount":"Total Amount",
     "average_payment":"Average Payment",
-    "payments_list":"Payments List"
+    "payments_list":"Payments List",
+    "total_users":"Total Users",
+    "total_staff":"Total Staff",
+    "users_management":"Users Management"
 }

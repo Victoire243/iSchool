@@ -1,4 +1,3 @@
-from re import U
 from flet import *  # type: ignore
 from core import AppState, Constants
 from utils import Utils
