@@ -162,5 +162,11 @@
     "total_users":"Total Users",
     "total_staff":"Total Staff",
     "users_management":"Users Management",
-    "role":"Role"
+    "role":"Role",
+    "classrooms_management":"Classrooms Management",
+    "school_years_management":"School Years Management",
+    "staff_management":"Staff Management",
+    "level":"Level",
+    "new_user": "New User",
+    "new_classroom": "New Classroom"
 }

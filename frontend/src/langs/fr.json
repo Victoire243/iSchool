@@ -160,7 +160,13 @@
     "average_payment":"Paiement moyen",
     "payments_list":"Liste des paiements",
     "total_users":"Total des utilisateurs",
-    "total_staff":"Total de staff",
+    "total_staff":"Total du personnel",
     "users_management":"Gestion des utilisateurs",
-    "role":"R\u00f4le"
+    "role":"R\u00f4le",
+    "classrooms_management":"Gestion des classes",
+    "school_years_management":"Gestion des ann\u00e9es scolaires",
+    "staff_management":"Gestion du personnel",
+    "level":"Niveau",
+    "new_user": "Nouvel Utilisateur",
+    "new_classroom": "Nouvelle Classe"
 }

@@ -3,7 +3,7 @@ import asyncio
 from core import AppState, Constants
 from utils import Utils
 from .admin_services import AdminServices
-from models import UserModel
+from models import UserModel, ClassroomModel, SchoolYearModel, StaffModel
 
 
 class AdminScreen:
@@ -110,13 +110,16 @@ class AdminScreen:
                         ],
                     ),
                     Container(
-                        content=self.active_menu,
+                        content=Row(
+                            [self.active_menu, self.add_action_button],
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
                         margin=Margin(top=20, bottom=10),
                     ),
-                    self.users_table_container,
+                    self.data_table_container,
                 ],
             )
-            await self._update_table()
+            # await self._update_user_table()
             try:
                 self.main_content.update()
             except Exception as e:
@@ -140,15 +143,63 @@ class AdminScreen:
             **self.get_box_style(),
         )
 
-        self.active_menu = Text(
-            self.get_text("users_management"),
-            size=18,
-            weight=FontWeight.BOLD,
-            color=Constants.PRIMARY_COLOR,
+        self.active_menu = Dropdown(
+            value="users",
+            text_style=TextStyle(
+                size=18, color=Constants.PRIMARY_COLOR, weight=FontWeight.BOLD
+            ),
+            options=[
+                DropdownOption(
+                    key="users",
+                    text=self.get_text("users_management"),
+                    leading_icon=Icons.PEOPLE,
+                    data="users",
+                ),
+                DropdownOption(
+                    key="classrooms",
+                    text=self.get_text("classrooms_management"),
+                    leading_icon=Icons.CLASS_,
+                    data="classrooms",
+                ),
+                DropdownOption(
+                    key="school_years",
+                    text=self.get_text("school_years_management"),
+                    leading_icon=Icons.CALENDAR_MONTH,
+                    data="school_years",
+                ),
+                DropdownOption(
+                    key="staff",
+                    text=self.get_text("staff_management"),
+                    leading_icon=Icons.PERSON,
+                    data="staff",
+                ),
+            ],
+            dense=True,
+            on_change=self._handle_active_menu_change,
+        )
+        self.add_action_button = Button(
+            icon=Icons.ADD,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
         )
 
+    async def _handle_active_menu_change(self, e: Event):
+        match e.control.value:
+            case "classrooms":
+                self._update_classroom_table()
+            case "users":
+                await self._update_user_table()
+            case "school_years":
+                self._update_school_year_table()
+            case "staff":
+                self._update_staff_table()
+
     def _build_table_components(self):
-        self.users_table_container = Container(
+        self.data_table_container = Container(
             content=Column(
                 controls=[],
                 scroll=ScrollMode.AUTO,
@@ -157,7 +208,11 @@ class AdminScreen:
             **self.get_box_style(),
         )
 
-    def _create_table_header(self):
+    #################################################################
+    # ----------------------  TABLES -------------------------------#
+
+    # ------------- USERS TABLE
+    def _create_users_table_header(self):
         """Create table header row"""
         return Container(
             content=Row(
@@ -282,11 +337,14 @@ class AdminScreen:
             bgcolor=row_color,
         )
 
-    async def _update_table(self):
-        """Update the students table with current data"""
+    async def _update_user_table(self):
+        """Update the users table with current data"""
 
         # Build table content
-        table_controls = [self._create_table_header()]
+        table_controls = [self._create_users_table_header()]
+
+        # Update add button
+        self.add_action_button.content = self.get_text("new_user")
 
         if not self.users_data:
             # No students found message
@@ -319,14 +377,516 @@ class AdminScreen:
             for index, user in enumerate(self.users_data):
                 table_controls.append(await self._create_user_table_row(user, index))
 
-        self.users_table_container.content = Column(
+        self.data_table_container.content = Column(
             controls=table_controls,
             scroll=ScrollMode.AUTO,
             spacing=0,
         )
 
         try:
-            self.users_table_container.update()
+            self.add_action_button.update()
+            self.data_table_container.update()
+        except Exception as e:
+            # print("Error updating table:", e)
+            pass
+
+    # ------------- CLASSROOMS TABLE
+    def _create_classrooms_table_header(self):
+        """Create classrooms table header row"""
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(
+                            self.get_text("classroom"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("level"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("actions"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                ],
+            ),
+            bgcolor=Constants.PRIMARY_COLOR,
+            border_radius=BorderRadius.only(top_left=10, top_right=10),
+            height=65,
+        )
+
+    def _create_classroom_table_row(self, classroom: ClassroomModel, index):
+        """Create a table row for a classroom"""
+        classroom_name = classroom.name
+        classroom_level = classroom.level
+
+        row_color = "#f8faff" if index % 2 == 0 else "#ffffff"
+
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(classroom_name, size=14),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(classroom_level, size=14),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Row(
+                            controls=[
+                                IconButton(
+                                    icon=Icons.EDIT,
+                                    icon_color=Constants.PRIMARY_COLOR,
+                                    tooltip=self.get_text("edit"),
+                                    # on_click=lambda e, s=student: self._open_edit_dialog(
+                                    #     s
+                                    # ),
+                                ),
+                                IconButton(
+                                    icon=Icons.DELETE,
+                                    icon_color=Constants.CANCEL_COLOR,
+                                    tooltip=self.get_text("delete"),
+                                    # on_click=lambda e, s=student: self._open_delete_dialog(
+                                    #     s
+                                    # ),
+                                ),
+                            ],
+                            spacing=5,
+                        ),
+                        expand=2,
+                        padding=Padding.all(5),
+                    ),
+                ],
+            ),
+            bgcolor=row_color,
+        )
+
+    def _update_classroom_table(self):
+        """Update the classrooms table with current data"""
+
+        # Build table content
+        table_controls = [self._create_classrooms_table_header()]
+
+        # Update add button
+        self.add_action_button.content = self.get_text("new_classroom")
+
+        if not self.classrooms_data:
+            # No students found message
+            table_controls.append(
+                Container(
+                    content=Column(
+                        controls=[
+                            Icon(Icons.SEARCH_OFF, size=60, color=Colors.GREY_400),
+                            Text(
+                                self.get_text("no_classrooms_found"),
+                                size=18,
+                                weight=FontWeight.BOLD,
+                                color=Colors.GREY_600,
+                            ),
+                            Text(
+                                self.get_text("no_classrooms_message"),
+                                size=14,
+                                color=Colors.GREY_500,
+                            ),
+                        ],
+                        horizontal_alignment=CrossAxisAlignment.CENTER,
+                        spacing=10,
+                    ),
+                    padding=Padding.all(40),
+                    alignment=Alignment(0, 0),
+                )
+            )
+        else:
+            # Add classrooms rows
+            for index, classroom in enumerate(self.classrooms_data):
+                table_controls.append(
+                    self._create_classroom_table_row(classroom, index)
+                )
+
+        self.data_table_container.content = Column(
+            controls=table_controls,
+            scroll=ScrollMode.AUTO,
+            spacing=0,
+        )
+
+        try:
+            self.add_action_button.update()
+            self.data_table_container.update()
+        except Exception as e:
+            # print("Error updating table:", e)
+            pass
+
+    # ------------- SCHOOL YEARS TABLE
+    def _create_school_years_table_header(self):
+        """Create school years table header row"""
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(
+                            self.get_text("name"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("start_date"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("end_date"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("is_active"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("actions"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                ],
+            ),
+            bgcolor=Constants.PRIMARY_COLOR,
+            border_radius=BorderRadius.only(top_left=10, top_right=10),
+            height=65,
+        )
+
+    def _create_school_year_table_row(self, school_year: SchoolYearModel, index):
+        """Create a table row for a school year"""
+        school_year_name = school_year.name
+        start_date = school_year.start_date
+        end_date = school_year.end_date
+        is_active = school_year.is_active
+
+        row_color = "#f8faff" if index % 2 == 0 else "#ffffff"
+
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(school_year_name, size=14),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(start_date, size=14),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(end_date, size=14),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Switch(
+                            value=is_active,
+                            disabled=is_active,
+                            active_color=Constants.PRIMARY_COLOR,
+                            data=school_year,
+                            overlay_color={
+                                ControlState.DISABLED: Constants.PRIMARY_COLOR,
+                            },
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Row(
+                            controls=[
+                                IconButton(
+                                    icon=Icons.EDIT,
+                                    icon_color=Constants.PRIMARY_COLOR,
+                                    tooltip=self.get_text("edit"),
+                                    # on_click=lambda e, s=student: self._open_edit_dialog(
+                                    #     s
+                                    # ),
+                                ),
+                                IconButton(
+                                    icon=Icons.DELETE,
+                                    icon_color=Constants.CANCEL_COLOR,
+                                    tooltip=self.get_text("delete"),
+                                    # on_click=lambda e, s=student: self._open_delete_dialog(
+                                    #     s
+                                    # ),
+                                ),
+                            ],
+                            spacing=5,
+                        ),
+                        expand=2,
+                        padding=Padding.all(5),
+                    ),
+                ],
+            ),
+            bgcolor=row_color,
+        )
+
+    def _update_school_year_table(self):
+        """Update the school year table with current data"""
+
+        # Build table content
+        table_controls = [self._create_school_years_table_header()]
+
+        # Update add button
+        self.add_action_button.content = self.get_text("new_school_year")
+
+        if not self.school_year_data:
+            # No students found message
+            table_controls.append(
+                Container(
+                    content=Column(
+                        controls=[
+                            Icon(Icons.SEARCH_OFF, size=60, color=Colors.GREY_400),
+                            Text(
+                                self.get_text("no_school_years_found"),
+                                size=18,
+                                weight=FontWeight.BOLD,
+                                color=Colors.GREY_600,
+                            ),
+                            Text(
+                                self.get_text("no_school_years_message"),
+                                size=14,
+                                color=Colors.GREY_500,
+                            ),
+                        ],
+                        horizontal_alignment=CrossAxisAlignment.CENTER,
+                        spacing=10,
+                    ),
+                    padding=Padding.all(40),
+                    alignment=Alignment(0, 0),
+                )
+            )
+        else:
+            # Add classrooms rows
+            for index, school_year in enumerate(self.school_year_data):
+                table_controls.append(
+                    self._create_school_year_table_row(school_year, index)
+                )
+
+        self.data_table_container.content = Column(
+            controls=table_controls,
+            scroll=ScrollMode.AUTO,
+            spacing=0,
+        )
+
+        try:
+            self.add_action_button.update()
+            self.data_table_container.update()
+        except Exception as e:
+            # print("Error updating table:", e)
+            pass
+
+    # ------------- STAFF TABLE
+    def _create_staff_table_header(self):
+        """Create staff table header row"""
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(
+                            self.get_text("full_name"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("position"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("hire_date"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("salary_base"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            self.get_text("actions"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                ],
+            ),
+            bgcolor=Constants.PRIMARY_COLOR,
+            border_radius=BorderRadius.only(top_left=10, top_right=10),
+            height=65,
+        )
+
+    def _create_staff_table_row(self, staff: StaffModel, index):
+        """Create a table row for a staff"""
+        full_name = f"{staff.first_name} {staff.last_name}"
+        position = staff.position
+        hire_date = staff.hire_date
+        salary_base = f"{staff.salary_base:.1f} Fc" if staff.salary_base else "0.0 Fc"
+
+        row_color = "#f8faff" if index % 2 == 0 else "#ffffff"
+
+        return Container(
+            content=Row(
+                controls=[
+                    Container(
+                        content=Text(full_name, size=14),
+                        expand=3,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(position, size=14),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(hire_date, size=14),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(salary_base, size=14),
+                        expand=2,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Row(
+                            controls=[
+                                IconButton(
+                                    icon=Icons.EDIT,
+                                    icon_color=Constants.PRIMARY_COLOR,
+                                    tooltip=self.get_text("edit"),
+                                    # on_click=lambda e, s=student: self._open_edit_dialog(
+                                    #     s
+                                    # ),
+                                ),
+                                IconButton(
+                                    icon=Icons.DELETE,
+                                    icon_color=Constants.CANCEL_COLOR,
+                                    tooltip=self.get_text("delete"),
+                                    # on_click=lambda e, s=student: self._open_delete_dialog(
+                                    #     s
+                                    # ),
+                                ),
+                            ],
+                            spacing=5,
+                        ),
+                        expand=2,
+                        padding=Padding.all(5),
+                    ),
+                ],
+            ),
+            bgcolor=row_color,
+        )
+
+    def _update_staff_table(self):
+        """Update the staff table with current data"""
+
+        # Build table content
+        table_controls = [self._create_staff_table_header()]
+
+        # Update add button
+        self.add_action_button.content = self.get_text("new_staff")
+
+        if not self.staff_data:
+            # No students found message
+            table_controls.append(
+                Container(
+                    content=Column(
+                        controls=[
+                            Icon(Icons.SEARCH_OFF, size=60, color=Colors.GREY_400),
+                            Text(
+                                self.get_text("no_staff_found"),
+                                size=18,
+                                weight=FontWeight.BOLD,
+                                color=Colors.GREY_600,
+                            ),
+                            Text(
+                                self.get_text("no_staff_message"),
+                                size=14,
+                                color=Colors.GREY_500,
+                            ),
+                        ],
+                        horizontal_alignment=CrossAxisAlignment.CENTER,
+                        spacing=10,
+                    ),
+                    padding=Padding.all(40),
+                    alignment=Alignment(0, 0),
+                )
+            )
+        else:
+            # Add classrooms rows
+            for index, staff in enumerate(self.staff_data):
+                table_controls.append(self._create_staff_table_row(staff, index))
+
+        self.data_table_container.content = Column(
+            controls=table_controls,
+            scroll=ScrollMode.AUTO,
+            spacing=0,
+        )
+
+        try:
+            self.add_action_button.update()
+            self.data_table_container.update()
         except Exception as e:
             # print("Error updating table:", e)
             pass
@@ -388,3 +948,9 @@ class AdminScreen:
             ],
             expand=True,
         )
+
+    ######################################################################
+    #####################     SERVICES CALLBACK   ########################
+
+    async def _activate_school_year(self, e: Event):
+        pass
