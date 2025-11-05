@@ -1,4 +1,3 @@
-import email
 from flet import *  # type: ignore
 import asyncio
 from core import AppState, Constants
@@ -38,17 +37,35 @@ class AdminScreen:
             "bgcolor": "#f8faff",
         }
 
+    @staticmethod
+    def get_color_by_user_role(role: str) -> ColorValue:
+        if not role.strip():
+            return Colors.GREEN
+        match role.lower()[0]:
+            case "a":  # Admin
+                return Colors.RED
+            case "c":  # Comptable
+                return Colors.ORANGE
+            case "e":  # Enseignant
+                return Constants.PRIMARY_COLOR
+            case "s":  # Surveillant
+                return Constants.SECONDARY_COLOR
+        return Colors.ORANGE
+
     async def load_data(self):
-        """Load all necessary data for the payment screen"""
+        """Load all necessary data for the admin screen"""
         try:
             # Load data in parallel
-            users_status, users_data = await self.services.load_users_data()
-            classrooms_status, classrooms_data = (
-                await self.services.load_classrooms_data()
-            )
-            staff_status, staff_data = await self.services.load_staff_data()
-            school_year_status, school_year_data = (
-                await self.services.load_school_years_data()
+            (
+                (users_status, users_data),
+                (classrooms_status, classrooms_data),
+                (staff_status, staff_data),
+                (school_year_status, school_year_data),
+            ) = await asyncio.gather(
+                self.services.load_users_data(),
+                self.services.load_classrooms_data(),
+                self.services.load_staff_data(),
+                self.services.load_school_years_data(),
             )
 
             # Store data
@@ -99,7 +116,7 @@ class AdminScreen:
                     self.users_table_container,
                 ],
             )
-            self._update_table()
+            await self._update_table()
             try:
                 self.main_content.update()
             except Exception as e:
@@ -194,15 +211,15 @@ class AdminScreen:
             ),
             bgcolor=Constants.PRIMARY_COLOR,
             border_radius=BorderRadius.only(top_left=10, top_right=10),
-            height=50,
+            height=65,
         )
 
-    def _create_users_table_row(self, user: UserModel, index):
-        """Create a table row for a student"""
+    async def _create_user_table_row(self, user: UserModel, index):
+        """Create a table row for a user"""
         user_name = user.username
         user_email = user.email
         user_password = user.password
-        user_role = user.role_id
+        user_role = await self.services.get_user_role_by_user_id(user.id_user)
 
         row_color = "#f8faff" if index % 2 == 0 else "#ffffff"
 
@@ -225,9 +242,15 @@ class AdminScreen:
                         padding=Padding.all(10),
                     ),
                     Container(
-                        content=Text(user_role, size=14),
+                        content=Text(
+                            Utils.trunc_text(user_role, length=5),
+                            size=14,
+                            color=Colors.WHITE,
+                        ),
                         expand=1,
                         padding=Padding.all(10),
+                        bgcolor=self.get_color_by_user_role(user_role),
+                        border_radius=BorderRadius.all(10),
                     ),
                     Container(
                         content=Row(
@@ -259,7 +282,7 @@ class AdminScreen:
             bgcolor=row_color,
         )
 
-    def _update_table(self):
+    async def _update_table(self):
         """Update the students table with current data"""
 
         # Build table content
@@ -294,7 +317,7 @@ class AdminScreen:
         else:
             # Add user rows
             for index, user in enumerate(self.users_data):
-                table_controls.append(self._create_users_table_row(user, index))
+                table_controls.append(await self._create_user_table_row(user, index))
 
         self.users_table_container.content = Column(
             controls=table_controls,

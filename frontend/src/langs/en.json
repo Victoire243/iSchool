@@ -161,5 +161,6 @@
     "payments_list":"Payments List",
     "total_users":"Total Users",
     "total_staff":"Total Staff",
-    "users_management":"Users Management"
+    "users_management":"Users Management",
+    "role":"Role"
 }
