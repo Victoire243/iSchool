@@ -66,6 +66,7 @@ class AdminScreen:
                 self.services.load_classrooms_data(),
                 self.services.load_staff_data(),
                 self.services.load_school_years_data(),
+                return_exceptions=True,
             )
 
             # Store data

@@ -35,6 +35,7 @@ class PaymentScreen:
         self.items_per_page = 10
         self.search_query = ""
         self.selected_payment_type_filter = "all"
+        self.selected_classroom_filter = "all"
 
         self.build_components()
         self._build_add_form_components()
@@ -89,11 +90,17 @@ class PaymentScreen:
             self.search_query = ""
             self.search_field.value = ""
             self.selected_payment_type_filter = "all"
+            self.selected_classroom_filter = "all"
 
             # Update payment type filter options
             self._update_payment_type_filter_options()
             if hasattr(self, "payment_type_filter_dropdown"):
                 self.payment_type_filter_dropdown.value = "all"
+
+            # Update classroom filter options
+            self._update_classroom_filter_options()
+            if hasattr(self, "classroom_filter_dropdown"):
+                self.classroom_filter_dropdown.value = "all"
 
             # Apply filters
             self._apply_filters()
@@ -359,6 +366,16 @@ class PaymentScreen:
             on_change=self._on_payment_type_filter_change,
         )
 
+        self.classroom_filter_dropdown = Dropdown(
+            label=self.get_text("filter_by_classroom"),
+            value="all",
+            options=[
+                DropdownOption(key="all", text=self.get_text("all_classrooms")),
+            ],
+            width=250,
+            on_change=self._on_classroom_filter_change,
+        )
+
         self.items_per_page_dropdown = Dropdown(
             label=self.get_text("items_per_page"),
             value="10",
@@ -401,6 +418,7 @@ class PaymentScreen:
                         controls=[
                             self.search_field,
                             self.payment_type_filter_dropdown,
+                            self.classroom_filter_dropdown,
                         ],
                         alignment=MainAxisAlignment.SPACE_BETWEEN,
                         vertical_alignment=CrossAxisAlignment.CENTER,
@@ -739,6 +757,17 @@ class PaymentScreen:
             payment_type_id = int(self.selected_payment_type_filter)
             filtered = [p for p in filtered if p.payment_type_id == payment_type_id]
 
+        # Apply classroom filter
+        if self.selected_classroom_filter != "all":
+            classroom_id = int(self.selected_classroom_filter)
+            # Get student IDs for this classroom
+            student_ids_in_classroom = [
+                e.student_id
+                for e in self.enrollments_data
+                if e.classroom_id == classroom_id
+            ]
+            filtered = [p for p in filtered if p.student_id in student_ids_in_classroom]
+
         self.filtered_payments = filtered
 
     def _update_payment_type_filter_options(self):
@@ -755,6 +784,22 @@ class PaymentScreen:
 
         self.payment_type_filter_dropdown.options = options
 
+    def _update_classroom_filter_options(self):
+        """Update classroom filter dropdown options"""
+        if not hasattr(self, "classroom_filter_dropdown"):
+            return
+
+        options = [
+            DropdownOption(key="all", text=self.get_text("all_classrooms")),
+        ]
+
+        for classroom in self.classrooms_data:
+            options.append(
+                DropdownOption(key=str(classroom.id_classroom), text=classroom.name)
+            )
+
+        self.classroom_filter_dropdown.options = options
+
     def _on_search_change(self, e):
         """Handle search field change"""
         self.search_query = e.control.value
@@ -765,6 +810,13 @@ class PaymentScreen:
     def _on_payment_type_filter_change(self, e):
         """Handle payment type filter change"""
         self.selected_payment_type_filter = e.control.value
+        self.current_page = 1
+        self._apply_filters()
+        self._update_table()
+
+    def _on_classroom_filter_change(self, e):
+        """Handle classroom filter change"""
+        self.selected_classroom_filter = e.control.value
         self.current_page = 1
         self._apply_filters()
         self._update_table()
@@ -866,7 +918,7 @@ class PaymentScreen:
                             weight=FontWeight.BOLD,
                             color="white",
                         ),
-                        expand=2,
+                        expand=1,
                         padding=Padding.all(10),
                     ),
                     Container(
@@ -887,11 +939,21 @@ class PaymentScreen:
                         expand=1,
                         padding=Padding.all(10),
                     ),
+                    Container(
+                        content=Text(
+                            self.get_text("actions"),
+                            weight=FontWeight.BOLD,
+                            color=Colors.WHITE,
+                        ),
+                        expand=1,
+                        padding=Padding.all(10),
+                    ),
                 ],
                 alignment=MainAxisAlignment.SPACE_BETWEEN,
             ),
             bgcolor=Constants.PRIMARY_COLOR,
             border_radius=BorderRadius.only(top_left=10, top_right=10),
+            height=65,
         )
 
     def _create_table_row(self, payment: PaymentModel, index: int):
@@ -916,7 +978,7 @@ class PaymentScreen:
                     ),
                     Container(
                         content=Text(payment_type_name, size=14),
-                        expand=2,
+                        expand=1,
                         padding=Padding.all(10),
                     ),
                     Container(
@@ -930,6 +992,22 @@ class PaymentScreen:
                         content=Text(formatted_date, size=14),
                         expand=1,
                         padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Row(
+                            controls=[
+                                IconButton(
+                                    icon=Icons.VISIBILITY,
+                                    icon_color=Constants.PRIMARY_COLOR,
+                                    tooltip=self.get_text("view_payment"),
+                                    # on_click=lambda e, s=student: self._open_edit_dialog(
+                                    #     s
+                                    # ),
+                                )
+                            ]
+                        ),
+                        expand=1,
+                        padding=Padding.all(5),
                     ),
                 ],
                 alignment=MainAxisAlignment.SPACE_BETWEEN,
