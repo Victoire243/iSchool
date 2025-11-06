@@ -124,6 +124,15 @@ class AdminScreen:
                 ],
             )
             # await self._update_user_table()
+            match self.active_menu.value:
+                case "classrooms":
+                    await self._update_classroom_table()
+                case "users":
+                    await self._update_user_table()
+                case "school_years":
+                    await self._update_school_year_table()
+                case "staff":
+                    await self._update_staff_table()
             try:
                 self.main_content.update()
             except Exception as e:
