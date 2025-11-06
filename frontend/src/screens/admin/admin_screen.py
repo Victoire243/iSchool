@@ -204,15 +204,16 @@ class AdminScreen:
     async def _handle_active_menu_change(self, e: Event):
         match e.control.value:
             case "classrooms":
-                self._update_classroom_table()
+                await self._update_classroom_table()
             case "users":
                 await self._update_user_table()
             case "school_years":
-                self._update_school_year_table()
+                await self._update_school_year_table()
             case "staff":
-                self._update_staff_table()
+                await self._update_staff_table()
 
         try:
+            self.add_action_button.update()
             self.data_table_container.update()
         except Exception as ex:
             pass
@@ -1406,7 +1407,7 @@ class AdminScreen:
         self._close_classroom_edit_dialog()
 
         # Refresh table
-        self._update_classroom_table()
+        await self._update_classroom_table()
 
     async def _save_school_year_changes(self, e):
         """Save changes to school year"""
@@ -1438,7 +1439,7 @@ class AdminScreen:
         self._close_school_year_edit_dialog()
 
         # Refresh table
-        self._update_school_year_table()
+        await self._update_school_year_table()
 
     async def _save_staff_changes(self, e):
         """Save changes to staff"""
@@ -1476,7 +1477,7 @@ class AdminScreen:
         self._close_staff_edit_dialog()
 
         # Refresh table
-        self._update_staff_table()
+        await self._update_staff_table()
 
     def _populate_roles_dropdown_for_edit(self):
         """Populate roles dropdown for edit dialog"""
@@ -1967,7 +1968,7 @@ class AdminScreen:
         self._close_classroom_delete_dialog()
 
         # Refresh table
-        self._update_classroom_table()
+        await self._update_classroom_table()
 
     async def _confirm_delete_school_year(self, e):
         """Confirm deletion of school year"""
@@ -1992,7 +1993,7 @@ class AdminScreen:
         self._close_school_year_delete_dialog()
 
         # Refresh table
-        self._update_school_year_table()
+        await self._update_school_year_table()
 
     async def _confirm_delete_staff(self, e):
         """Confirm deletion of staff"""
@@ -2015,7 +2016,7 @@ class AdminScreen:
         self._close_staff_delete_dialog()
 
         # Refresh table
-        self._update_staff_table()
+        await self._update_staff_table()
 
     #################################################################
     # ----------------------  TABLES -------------------------------#
@@ -2289,7 +2290,7 @@ class AdminScreen:
             bgcolor=row_color,
         )
 
-    def _update_classroom_table(self):
+    async def _update_classroom_table(self):
         """Update the classrooms table with current data"""
 
         # Build table content
@@ -2472,7 +2473,7 @@ class AdminScreen:
             bgcolor=row_color,
         )
 
-    def _update_school_year_table(self):
+    async def _update_school_year_table(self):
         """Update the school year table with current data"""
 
         # Build table content
@@ -2647,7 +2648,7 @@ class AdminScreen:
             bgcolor=row_color,
         )
 
-    def _update_staff_table(self):
+    async def _update_staff_table(self):
         """Update the staff table with current data"""
 
         # Build table content
