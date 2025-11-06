@@ -15,6 +15,7 @@ class AdminScreen:
 
         self.build_components()
         self._build_table_components()
+        self._build_form_components()
 
     async def on_mount(self):
         """Called when the screen is mounted"""
@@ -117,6 +118,7 @@ class AdminScreen:
                         ),
                         margin=Margin(top=20, bottom=10),
                     ),
+                    self.add_container,
                     self.data_table_container,
                 ],
             )
@@ -140,6 +142,15 @@ class AdminScreen:
             padding=Padding.symmetric(horizontal=20, vertical=10),
             expand=True,
             content=self.loading_indicator,
+            clip_behavior=ClipBehavior.ANTI_ALIAS,
+            **self.get_box_style(),
+        )
+
+        self.add_container = Container(
+            padding=Padding.all(15),
+            margin=Margin(top=10, bottom=10),
+            expand=False,
+            visible=False,
             clip_behavior=ClipBehavior.ANTI_ALIAS,
             **self.get_box_style(),
         )
@@ -186,6 +197,7 @@ class AdminScreen:
                 padding=Padding(10, 20, 10, 20),
                 color="white",
             ),
+            on_click=self._open_form,
         )
 
     async def _handle_active_menu_change(self, e: Event):
@@ -208,6 +220,700 @@ class AdminScreen:
             padding=Padding.all(10),
             **self.get_box_style(),
         )
+
+    #################################################################
+    # ----------------------  FORMS --------------------------------#
+
+    def _build_form_components(self):
+        """Build all form components"""
+        self._build_user_form()
+        self._build_classroom_form()
+        self._build_school_year_form()
+        self._build_staff_form()
+
+    def _build_user_form(self):
+        """Build user form components"""
+        self.user_username_field = TextField(
+            label=self.get_text("username"),
+            hint_text=self.get_text("enter_username"),
+            autofocus=True,
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("username_helper"),
+        )
+
+        self.user_email_field = TextField(
+            label=self.get_text("email"),
+            hint_text=self.get_text("enter_email"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("email_helper"),
+            keyboard_type=KeyboardType.EMAIL,
+        )
+
+        self.user_password_field = TextField(
+            label=self.get_text("password"),
+            hint_text=self.get_text("enter_password"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("password_helper"),
+            password=True,
+            can_reveal_password=True,
+        )
+
+        self.user_role_dropdown = Dropdown(
+            label=self.get_text("role"),
+            border_radius=BorderRadius.all(5),
+            options=[],
+            expand=1,
+            helper_text=self.get_text("select_role"),
+            width=float("inf"),
+            menu_width=200,
+        )
+
+        self.user_submit_button = Button(
+            content=self.get_text("submit"),
+            icon=Icons.SAVE,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._submit_user_form,
+        )
+
+        self.user_cancel_button = Button(
+            content=self.get_text("cancel"),
+            icon=Icons.CANCEL,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.CANCEL_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._close_form,
+        )
+
+        self.user_form_container = Column(
+            horizontal_alignment=CrossAxisAlignment.STRETCH,
+            controls=[
+                Text(
+                    value=self.get_text("add_user"),
+                    style=TextStyle(
+                        size=18,
+                        weight=FontWeight.BOLD,
+                        color=Constants.PRIMARY_COLOR,
+                    ),
+                ),
+                Row(
+                    controls=[
+                        self.user_username_field,
+                        self.user_email_field,
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Row(
+                    controls=[
+                        self.user_password_field,
+                        self.user_role_dropdown,
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Row(
+                    controls=[
+                        self.user_submit_button,
+                        self.user_cancel_button,
+                    ],
+                    alignment=MainAxisAlignment.END,
+                ),
+            ],
+        )
+
+    def _build_classroom_form(self):
+        """Build classroom form components"""
+        self.classroom_name_field = TextField(
+            label=self.get_text("classroom_name"),
+            hint_text=self.get_text("enter_classroom_name"),
+            autofocus=True,
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("classroom_name_helper"),
+        )
+
+        self.classroom_level_field = TextField(
+            label=self.get_text("level"),
+            hint_text=self.get_text("enter_level"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("level_helper"),
+        )
+
+        self.classroom_submit_button = Button(
+            content=self.get_text("submit"),
+            icon=Icons.SAVE,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._submit_classroom_form,
+        )
+
+        self.classroom_cancel_button = Button(
+            content=self.get_text("cancel"),
+            icon=Icons.CANCEL,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.CANCEL_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._close_form,
+        )
+
+        self.classroom_form_container = Column(
+            horizontal_alignment=CrossAxisAlignment.STRETCH,
+            controls=[
+                Text(
+                    value=self.get_text("add_classroom"),
+                    style=TextStyle(
+                        size=18,
+                        weight=FontWeight.BOLD,
+                        color=Constants.PRIMARY_COLOR,
+                    ),
+                ),
+                Row(
+                    controls=[
+                        self.classroom_name_field,
+                        self.classroom_level_field,
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Row(
+                    controls=[
+                        self.classroom_submit_button,
+                        self.classroom_cancel_button,
+                    ],
+                    alignment=MainAxisAlignment.END,
+                ),
+            ],
+        )
+
+    def _build_school_year_form(self):
+        """Build school year form components"""
+        self.school_year_name_field = TextField(
+            label=self.get_text("school_year_name"),
+            hint_text=self.get_text("enter_school_year_name"),
+            autofocus=True,
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("school_year_name_helper"),
+        )
+
+        self.school_year_start_date_field = TextField(
+            label=self.get_text("start_date"),
+            hint_text=self.get_text("enter_start_date"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("date_format_yyyy_mm_dd"),
+            keyboard_type=KeyboardType.DATETIME,
+            value="2024-09-01",
+        )
+
+        self.school_year_end_date_field = TextField(
+            label=self.get_text("end_date"),
+            hint_text=self.get_text("enter_end_date"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("date_format_yyyy_mm_dd"),
+            keyboard_type=KeyboardType.DATETIME,
+            value="2025-06-30",
+        )
+
+        self.school_year_status_switch = Switch(
+            label=self.get_text("active"),
+            value=False,
+        )
+
+        self.school_year_submit_button = Button(
+            content=self.get_text("submit"),
+            icon=Icons.SAVE,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._submit_school_year_form,
+        )
+
+        self.school_year_cancel_button = Button(
+            content=self.get_text("cancel"),
+            icon=Icons.CANCEL,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.CANCEL_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._close_form,
+        )
+
+        self.school_year_form_container = Column(
+            horizontal_alignment=CrossAxisAlignment.STRETCH,
+            controls=[
+                Text(
+                    value=self.get_text("add_school_year"),
+                    style=TextStyle(
+                        size=18,
+                        weight=FontWeight.BOLD,
+                        color=Constants.PRIMARY_COLOR,
+                    ),
+                ),
+                Row(
+                    controls=[
+                        self.school_year_name_field,
+                        self.school_year_start_date_field,
+                        self.school_year_end_date_field,
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Container(
+                    content=self.school_year_status_switch,
+                    padding=Padding.symmetric(vertical=10),
+                ),
+                Row(
+                    controls=[
+                        self.school_year_submit_button,
+                        self.school_year_cancel_button,
+                    ],
+                    alignment=MainAxisAlignment.END,
+                ),
+            ],
+        )
+
+    def _build_staff_form(self):
+        """Build staff form components"""
+        self.staff_first_name_field = TextField(
+            label=self.get_text("first_name"),
+            hint_text=self.get_text("enter_first_name"),
+            autofocus=True,
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("staff_first_name_helper"),
+        )
+
+        self.staff_last_name_field = TextField(
+            label=self.get_text("last_name"),
+            hint_text=self.get_text("enter_last_name"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("staff_last_name_helper"),
+        )
+
+        self.staff_position_field = TextField(
+            label=self.get_text("position"),
+            hint_text=self.get_text("enter_position"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("position_helper"),
+        )
+
+        self.staff_hire_date_field = TextField(
+            label=self.get_text("hire_date"),
+            hint_text=self.get_text("enter_hire_date"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("hire_date_helper"),
+            keyboard_type=KeyboardType.DATETIME,
+            value="2024-01-01",
+        )
+
+        self.staff_salary_field = TextField(
+            label=self.get_text("salary_base"),
+            hint_text=self.get_text("enter_salary"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper=self.get_text("salary_helper"),
+            keyboard_type=KeyboardType.NUMBER,
+            input_filter=NumbersOnlyInputFilter(),
+        )
+
+        self.staff_submit_button = Button(
+            content=self.get_text("submit"),
+            icon=Icons.SAVE,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._submit_staff_form,
+        )
+
+        self.staff_cancel_button = Button(
+            content=self.get_text("cancel"),
+            icon=Icons.CANCEL,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.CANCEL_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._close_form,
+        )
+
+        self.staff_form_container = Column(
+            horizontal_alignment=CrossAxisAlignment.STRETCH,
+            controls=[
+                Text(
+                    value=self.get_text("add_staff"),
+                    style=TextStyle(
+                        size=18,
+                        weight=FontWeight.BOLD,
+                        color=Constants.PRIMARY_COLOR,
+                    ),
+                ),
+                Row(
+                    controls=[
+                        self.staff_first_name_field,
+                        self.staff_last_name_field,
+                        self.staff_position_field,
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Row(
+                    controls=[
+                        self.staff_hire_date_field,
+                        self.staff_salary_field,
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Row(
+                    controls=[
+                        self.staff_submit_button,
+                        self.staff_cancel_button,
+                    ],
+                    alignment=MainAxisAlignment.END,
+                ),
+            ],
+        )
+
+    # Form management methods
+    def _open_form(self, e):
+        """Open the appropriate form based on active menu"""
+        active_menu = self.active_menu.value
+
+        # Set the appropriate form in add_container
+        if active_menu == "users":
+            self.add_container.content = self.user_form_container
+            self._populate_roles_dropdown()
+        elif active_menu == "classrooms":
+            self.add_container.content = self.classroom_form_container
+        elif active_menu == "school_years":
+            self.add_container.content = self.school_year_form_container
+        elif active_menu == "staff":
+            self.add_container.content = self.staff_form_container
+
+        # Show container and update button
+        self.add_container.visible = True
+        self.add_action_button.icon = Icons.CLOSE
+        self.add_action_button.style.bgcolor = Constants.CANCEL_COLOR
+        self.add_action_button.on_click = self._close_form
+
+        self.add_container.update()
+        self.add_action_button.update()
+
+    def _close_form(self, e):
+        """Close the form"""
+        self.add_container.visible = False
+        self.add_action_button.icon = Icons.ADD
+        self.add_action_button.style.bgcolor = Constants.PRIMARY_COLOR
+        self.add_action_button.on_click = self._open_form
+
+        self._clear_forms()
+
+        self.add_container.update()
+        self.add_action_button.update()
+
+    def _clear_forms(self):
+        """Clear all form fields"""
+        # Clear user form
+        if hasattr(self, "user_username_field"):
+            self.user_username_field.value = ""
+            self.user_email_field.value = ""
+            self.user_password_field.value = ""
+            self.user_role_dropdown.value = None
+
+        # Clear classroom form
+        if hasattr(self, "classroom_name_field"):
+            self.classroom_name_field.value = ""
+            self.classroom_level_field.value = ""
+
+        # Clear school year form
+        if hasattr(self, "school_year_name_field"):
+            self.school_year_name_field.value = ""
+            self.school_year_start_date_field.value = "2024-09-01"
+            self.school_year_end_date_field.value = "2025-06-30"
+            self.school_year_status_switch.value = False
+
+        # Clear staff form
+        if hasattr(self, "staff_first_name_field"):
+            self.staff_first_name_field.value = ""
+            self.staff_last_name_field.value = ""
+            self.staff_position_field.value = ""
+            self.staff_hire_date_field.value = "2024-01-01"
+            self.staff_salary_field.value = ""
+
+    def _populate_roles_dropdown(self):
+        """Populate roles dropdown with available roles"""
+        # TODO: Load roles from services
+        # For now, using placeholder roles
+        self.user_role_dropdown.options = [
+            DropdownOption(key="1", text="Administrateur"),
+            DropdownOption(key="2", text="Enseignant"),
+            DropdownOption(key="3", text="Comptable"),
+            DropdownOption(key="4", text="Surveillant"),
+        ]
+        # if hasattr(self.user_role_dropdown, "update"):
+        #     self.user_role_dropdown.update()
+
+    # Form submission methods
+    async def _submit_user_form(self, e):
+        """Submit user form"""
+        # Validate fields
+        if not self.user_username_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("usernameerror")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        if not self.user_email_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_email")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        if not self.user_password_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("passworderror")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        if not self.user_role_dropdown.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("select_role")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        # Create user data
+        user_data = {
+            "username": self.user_username_field.value,
+            "email": self.user_email_field.value,
+            "password": self.user_password_field.value,
+            "role_id": int(self.user_role_dropdown.value),
+        }
+
+        # TODO: Submit to service
+        print(f"User data to submit: {user_data}")
+
+        # Show success message
+        self.page.snack_bar = SnackBar(
+            Text(self.get_text("user_added_successfully")),
+            bgcolor=Colors.GREEN,
+        )
+        self.page.snack_bar.open = True
+        self.page.update()
+
+        # Close form and refresh data
+        self._close_form(e)
+        await self.load_data()
+
+    async def _submit_classroom_form(self, e):
+        """Submit classroom form"""
+        # Validate fields
+        if not self.classroom_name_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_classroom_name")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        if not self.classroom_level_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_level")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        # Create classroom data
+        classroom_data = {
+            "name": self.classroom_name_field.value,
+            "level": self.classroom_level_field.value,
+        }
+
+        # TODO: Submit to service
+        print(f"Classroom data to submit: {classroom_data}")
+
+        # Show success message
+        self.page.snack_bar = SnackBar(
+            Text(self.get_text("classroom_added_successfully")),
+            bgcolor=Colors.GREEN,
+        )
+        self.page.snack_bar.open = True
+        self.page.update()
+
+        # Close form and refresh data
+        self._close_form(e)
+        await self.load_data()
+
+    async def _submit_school_year_form(self, e):
+        """Submit school year form"""
+        # Validate fields
+        if not self.school_year_name_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_school_year_name")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        # Create school year data
+        school_year_data = {
+            "name": self.school_year_name_field.value,
+            "start_date": self.school_year_start_date_field.value,
+            "end_date": self.school_year_end_date_field.value,
+            "is_active": self.school_year_status_switch.value,
+        }
+
+        # TODO: Submit to service
+        print(f"School year data to submit: {school_year_data}")
+
+        # Show success message
+        self.page.snack_bar = SnackBar(
+            Text(self.get_text("school_year_added_successfully")),
+            bgcolor=Colors.GREEN,
+        )
+        self.page.snack_bar.open = True
+        self.page.update()
+
+        # Close form and refresh data
+        self._close_form(e)
+        await self.load_data()
+
+    async def _submit_staff_form(self, e):
+        """Submit staff form"""
+        # Validate fields
+        if not self.staff_first_name_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_first_name")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        if not self.staff_last_name_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_last_name")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        if not self.staff_position_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_position")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        if not self.staff_salary_field.value:
+            self.page.snack_bar = SnackBar(
+                Text(self.get_text("please_enter_salary")),
+                bgcolor=Constants.CANCEL_COLOR,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        # Create staff data
+        staff_data = {
+            "first_name": self.staff_first_name_field.value,
+            "last_name": self.staff_last_name_field.value,
+            "position": self.staff_position_field.value,
+            "hire_date": self.staff_hire_date_field.value,
+            "salary_base": float(self.staff_salary_field.value),
+        }
+
+        # TODO: Submit to service
+        print(f"Staff data to submit: {staff_data}")
+
+        # Show success message
+        self.page.snack_bar = SnackBar(
+            Text(self.get_text("staff_added_successfully")),
+            bgcolor=Colors.GREEN,
+        )
+        self.page.snack_bar.open = True
+        self.page.update()
+
+        # Close form and refresh data
+        self._close_form(e)
+        await self.load_data()
 
     #################################################################
     # ----------------------  TABLES -------------------------------#
