@@ -16,6 +16,7 @@ class AdminScreen:
         self.build_components()
         self._build_table_components()
         self._build_form_components()
+        self._build_edit_dialogs()
 
     async def on_mount(self):
         """Called when the screen is mounted"""
@@ -210,6 +211,11 @@ class AdminScreen:
                 self._update_school_year_table()
             case "staff":
                 self._update_staff_table()
+
+        try:
+            self.data_table_container.update()
+        except Exception as ex:
+            pass
 
     def _build_table_components(self):
         self.data_table_container = Container(
@@ -717,39 +723,15 @@ class AdminScreen:
         """Submit user form"""
         # Validate fields
         if not self.user_username_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("usernameerror")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         if not self.user_email_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_email")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         if not self.user_password_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("passworderror")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         if not self.user_role_dropdown.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("select_role")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         # Create user data
@@ -763,14 +745,6 @@ class AdminScreen:
         # TODO: Submit to service
         print(f"User data to submit: {user_data}")
 
-        # Show success message
-        self.page.snack_bar = SnackBar(
-            Text(self.get_text("user_added_successfully")),
-            bgcolor=Colors.GREEN,
-        )
-        self.page.snack_bar.open = True
-        self.page.update()
-
         # Close form and refresh data
         self._close_form(e)
         await self.load_data()
@@ -779,21 +753,9 @@ class AdminScreen:
         """Submit classroom form"""
         # Validate fields
         if not self.classroom_name_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_classroom_name")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         if not self.classroom_level_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_level")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         # Create classroom data
@@ -805,14 +767,6 @@ class AdminScreen:
         # TODO: Submit to service
         print(f"Classroom data to submit: {classroom_data}")
 
-        # Show success message
-        self.page.snack_bar = SnackBar(
-            Text(self.get_text("classroom_added_successfully")),
-            bgcolor=Colors.GREEN,
-        )
-        self.page.snack_bar.open = True
-        self.page.update()
-
         # Close form and refresh data
         self._close_form(e)
         await self.load_data()
@@ -821,12 +775,6 @@ class AdminScreen:
         """Submit school year form"""
         # Validate fields
         if not self.school_year_name_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_school_year_name")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         # Create school year data
@@ -840,14 +788,6 @@ class AdminScreen:
         # TODO: Submit to service
         print(f"School year data to submit: {school_year_data}")
 
-        # Show success message
-        self.page.snack_bar = SnackBar(
-            Text(self.get_text("school_year_added_successfully")),
-            bgcolor=Colors.GREEN,
-        )
-        self.page.snack_bar.open = True
-        self.page.update()
-
         # Close form and refresh data
         self._close_form(e)
         await self.load_data()
@@ -856,39 +796,15 @@ class AdminScreen:
         """Submit staff form"""
         # Validate fields
         if not self.staff_first_name_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_first_name")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         if not self.staff_last_name_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_last_name")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         if not self.staff_position_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_position")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         if not self.staff_salary_field.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_salary")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
             return
 
         # Create staff data
@@ -903,17 +819,1203 @@ class AdminScreen:
         # TODO: Submit to service
         print(f"Staff data to submit: {staff_data}")
 
-        # Show success message
-        self.page.snack_bar = SnackBar(
-            Text(self.get_text("staff_added_successfully")),
-            bgcolor=Colors.GREEN,
-        )
-        self.page.snack_bar.open = True
-        self.page.update()
-
         # Close form and refresh data
         self._close_form(e)
         await self.load_data()
+
+    #################################################################
+    # ----------------------  EDIT DIALOGS -------------------------#
+
+    def _build_edit_dialogs(self):
+        """Build all edit dialogs"""
+        self._build_user_edit_dialog()
+        self._build_classroom_edit_dialog()
+        self._build_school_year_edit_dialog()
+        self._build_staff_edit_dialog()
+        self._build_delete_dialogs()
+
+    def _build_user_edit_dialog(self):
+        """Build user edit dialog"""
+        self.edit_user_username_field = TextField(
+            label=self.get_text("username"),
+            hint_text=self.get_text("enter_username"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_user_email_field = TextField(
+            label=self.get_text("email"),
+            hint_text=self.get_text("enter_email"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            keyboard_type=KeyboardType.EMAIL,
+        )
+
+        self.edit_user_password_field = TextField(
+            label=self.get_text("password"),
+            hint_text=self.get_text("enter_password"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            password=True,
+            can_reveal_password=True,
+        )
+
+        self.edit_user_role_dropdown = Dropdown(
+            label=self.get_text("role"),
+            border_radius=BorderRadius.all(5),
+            options=[],
+            expand=1,
+            width=float("inf"),
+            menu_width=200,
+        )
+
+        self.edit_user_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("edit_user"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.PRIMARY_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Row(
+                            controls=[
+                                self.edit_user_username_field,
+                                self.edit_user_email_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Row(
+                            controls=[
+                                self.edit_user_password_field,
+                                self.edit_user_role_dropdown,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                    ],
+                    spacing=15,
+                    tight=True,
+                ),
+                width=600,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_user_edit_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("update")),
+                    on_click=self._save_user_changes,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def _build_classroom_edit_dialog(self):
+        """Build classroom edit dialog"""
+        self.edit_classroom_name_field = TextField(
+            label=self.get_text("classroom_name"),
+            hint_text=self.get_text("enter_classroom_name"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_classroom_level_field = TextField(
+            label=self.get_text("level"),
+            hint_text=self.get_text("enter_level"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_classroom_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("edit_classroom"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.PRIMARY_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Row(
+                            controls=[
+                                self.edit_classroom_name_field,
+                                self.edit_classroom_level_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                    ],
+                    spacing=15,
+                    tight=True,
+                ),
+                width=500,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_classroom_edit_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("update")),
+                    on_click=self._save_classroom_changes,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def _build_school_year_edit_dialog(self):
+        """Build school year edit dialog"""
+        self.edit_school_year_name_field = TextField(
+            label=self.get_text("school_year_name"),
+            hint_text=self.get_text("enter_school_year_name"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_school_year_start_date_field = TextField(
+            label=self.get_text("start_date"),
+            hint_text=self.get_text("enter_start_date"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            keyboard_type=KeyboardType.DATETIME,
+        )
+
+        self.edit_school_year_end_date_field = TextField(
+            label=self.get_text("end_date"),
+            hint_text=self.get_text("enter_end_date"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            keyboard_type=KeyboardType.DATETIME,
+        )
+
+        self.edit_school_year_status_switch = Switch(
+            label=self.get_text("active"),
+            value=False,
+        )
+
+        self.edit_school_year_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("edit_school_year"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.PRIMARY_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Row(
+                            controls=[
+                                self.edit_school_year_name_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Row(
+                            controls=[
+                                self.edit_school_year_start_date_field,
+                                self.edit_school_year_end_date_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Container(
+                            content=self.edit_school_year_status_switch,
+                            padding=Padding.symmetric(vertical=10),
+                        ),
+                    ],
+                    spacing=15,
+                    tight=True,
+                ),
+                width=550,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_school_year_edit_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("update")),
+                    on_click=self._save_school_year_changes,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def _build_staff_edit_dialog(self):
+        """Build staff edit dialog"""
+        self.edit_staff_first_name_field = TextField(
+            label=self.get_text("first_name"),
+            hint_text=self.get_text("enter_first_name"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_staff_last_name_field = TextField(
+            label=self.get_text("last_name"),
+            hint_text=self.get_text("enter_last_name"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_staff_position_field = TextField(
+            label=self.get_text("position"),
+            hint_text=self.get_text("enter_position"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_staff_hire_date_field = TextField(
+            label=self.get_text("hire_date"),
+            hint_text=self.get_text("enter_hire_date"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            keyboard_type=KeyboardType.DATETIME,
+        )
+
+        self.edit_staff_salary_field = TextField(
+            label=self.get_text("salary_base"),
+            hint_text=self.get_text("enter_salary"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            keyboard_type=KeyboardType.NUMBER,
+            input_filter=NumbersOnlyInputFilter(),
+        )
+
+        self.edit_staff_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("edit_staff"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.PRIMARY_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Row(
+                            controls=[
+                                self.edit_staff_first_name_field,
+                                self.edit_staff_last_name_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Row(
+                            controls=[
+                                self.edit_staff_position_field,
+                                self.edit_staff_hire_date_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        Row(
+                            controls=[
+                                self.edit_staff_salary_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                    ],
+                    spacing=15,
+                    tight=True,
+                ),
+                width=600,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_staff_edit_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("update")),
+                    on_click=self._save_staff_changes,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    # Dialog open methods
+    def _open_user_edit_dialog(self, user: UserModel):
+        """Open user edit dialog and populate with user data"""
+        if not user:
+            return
+
+        # Store current editing user ID
+        self.current_editing_user_id = user.id_user
+
+        # Populate fields
+        self.edit_user_username_field.value = user.username
+        self.edit_user_email_field.value = user.email
+        self.edit_user_password_field.value = user.password
+
+        # Populate role dropdown
+        self._populate_roles_dropdown_for_edit()
+        self.edit_user_role_dropdown.value = str(user.role_id)
+
+        # Open dialog
+        self.page.show_dialog(self.edit_user_dialog)
+        self.page.update()
+
+    def _open_classroom_edit_dialog(self, classroom: ClassroomModel):
+        """Open classroom edit dialog and populate with classroom data"""
+        if not classroom:
+            return
+
+        # Store current editing classroom ID
+        self.current_editing_classroom_id = classroom.id_classroom
+
+        # Populate fields
+        self.edit_classroom_name_field.value = classroom.name
+        self.edit_classroom_level_field.value = classroom.level
+
+        # Open dialog
+        self.page.show_dialog(self.edit_classroom_dialog)
+        self.page.update()
+
+    def _open_school_year_edit_dialog(self, school_year: SchoolYearModel):
+        """Open school year edit dialog and populate with school year data"""
+        if not school_year:
+            return
+
+        # Store current editing school year ID
+        self.current_editing_school_year_id = school_year.id_school_year
+
+        # Populate fields
+        self.edit_school_year_name_field.value = school_year.name
+        self.edit_school_year_start_date_field.value = school_year.start_date
+        self.edit_school_year_end_date_field.value = school_year.end_date
+        self.edit_school_year_status_switch.value = school_year.is_active
+
+        # Open dialog
+        self.page.show_dialog(self.edit_school_year_dialog)
+        self.page.update()
+
+    def _open_staff_edit_dialog(self, staff: StaffModel):
+        """Open staff edit dialog and populate with staff data"""
+        if not staff:
+            return
+
+        # Store current editing staff ID
+        self.current_editing_staff_id = staff.id_staff
+
+        # Populate fields
+        self.edit_staff_first_name_field.value = staff.first_name
+        self.edit_staff_last_name_field.value = staff.last_name
+        self.edit_staff_position_field.value = staff.position
+        self.edit_staff_hire_date_field.value = staff.hire_date
+        self.edit_staff_salary_field.value = str(int(staff.salary_base))
+
+        # Open dialog
+        self.page.show_dialog(self.edit_staff_dialog)
+        self.page.update()
+
+    # Dialog close methods
+    def _close_user_edit_dialog(self, e=None):
+        """Close user edit dialog"""
+        self.edit_user_dialog.open = False
+        self.page.update()
+
+    def _close_classroom_edit_dialog(self, e=None):
+        """Close classroom edit dialog"""
+        self.edit_classroom_dialog.open = False
+        self.page.update()
+
+    def _close_school_year_edit_dialog(self, e=None):
+        """Close school year edit dialog"""
+        self.edit_school_year_dialog.open = False
+        self.page.update()
+
+    def _close_staff_edit_dialog(self, e=None):
+        """Close staff edit dialog"""
+        self.edit_staff_dialog.open = False
+        self.page.update()
+
+    # Save changes methods
+    async def _save_user_changes(self, e):
+        """Save changes to user"""
+        # Validate fields
+        if not self.edit_user_username_field.value:
+            return
+
+        if not self.edit_user_email_field.value:
+            return
+
+        # Update user data locally
+        for i, user in enumerate(self.users_data):
+            if user.id_user == self.current_editing_user_id:
+                self.users_data[i].username = (
+                    self.edit_user_username_field.value.strip()
+                )
+                self.users_data[i].email = self.edit_user_email_field.value.strip()
+                self.users_data[i].password = (
+                    self.edit_user_password_field.value.strip()
+                )
+                self.users_data[i].role_id = int(self.edit_user_role_dropdown.value)
+                break
+
+        # TODO: Call API to update user
+        # success = await self.services.update_user(updated_user)
+
+        # Close dialog
+        self._close_user_edit_dialog()
+
+        # Refresh table
+        await self._update_user_table()
+
+    async def _save_classroom_changes(self, e):
+        """Save changes to classroom"""
+        # Validate fields
+        if not self.edit_classroom_name_field.value:
+            return
+
+        # Update classroom data locally
+        for i, classroom in enumerate(self.classrooms_data):
+            if classroom.id_classroom == self.current_editing_classroom_id:
+                self.classrooms_data[i].name = (
+                    self.edit_classroom_name_field.value.strip()
+                )
+                self.classrooms_data[i].level = (
+                    self.edit_classroom_level_field.value.strip()
+                )
+                break
+
+        # TODO: Call API to update classroom
+        # success = await self.services.update_classroom(updated_classroom)
+
+        # Close dialog
+        self._close_classroom_edit_dialog()
+
+        # Refresh table
+        self._update_classroom_table()
+
+    async def _save_school_year_changes(self, e):
+        """Save changes to school year"""
+        # Validate fields
+        if not self.edit_school_year_name_field.value:
+            return
+
+        # Update school year data locally
+        for i, school_year in enumerate(self.school_year_data):
+            if school_year.id_school_year == self.current_editing_school_year_id:
+                self.school_year_data[i].name = (
+                    self.edit_school_year_name_field.value.strip()
+                )
+                self.school_year_data[i].start_date = (
+                    self.edit_school_year_start_date_field.value.strip()
+                )
+                self.school_year_data[i].end_date = (
+                    self.edit_school_year_end_date_field.value.strip()
+                )
+                self.school_year_data[i].is_active = (
+                    self.edit_school_year_status_switch.value
+                )
+                break
+
+        # TODO: Call API to update school year
+        # success = await self.services.update_school_year(updated_school_year)
+
+        # Close dialog
+        self._close_school_year_edit_dialog()
+
+        # Refresh table
+        self._update_school_year_table()
+
+    async def _save_staff_changes(self, e):
+        """Save changes to staff"""
+        # Validate fields
+        if not self.edit_staff_first_name_field.value:
+            return
+
+        if not self.edit_staff_salary_field.value:
+            return
+
+        # Update staff data locally
+        for i, staff in enumerate(self.staff_data):
+            if staff.id_staff == self.current_editing_staff_id:
+                self.staff_data[i].first_name = (
+                    self.edit_staff_first_name_field.value.strip()
+                )
+                self.staff_data[i].last_name = (
+                    self.edit_staff_last_name_field.value.strip()
+                )
+                self.staff_data[i].position = (
+                    self.edit_staff_position_field.value.strip()
+                )
+                self.staff_data[i].hire_date = (
+                    self.edit_staff_hire_date_field.value.strip()
+                )
+                self.staff_data[i].salary_base = float(
+                    self.edit_staff_salary_field.value
+                )
+                break
+
+        # TODO: Call API to update staff
+        # success = await self.services.update_staff(updated_staff)
+
+        # Close dialog
+        self._close_staff_edit_dialog()
+
+        # Refresh table
+        self._update_staff_table()
+
+    def _populate_roles_dropdown_for_edit(self):
+        """Populate roles dropdown for edit dialog"""
+        self.edit_user_role_dropdown.options = [
+            DropdownOption(key="1", text="Administrateur"),
+            DropdownOption(key="2", text="Enseignant"),
+            DropdownOption(key="3", text="Comptable"),
+            DropdownOption(key="4", text="Surveillant"),
+        ]
+
+    #################################################################
+    # ----------------------  DELETE DIALOGS -----------------------#
+
+    def _build_delete_dialogs(self):
+        """Build all delete dialogs"""
+        self._build_user_delete_dialog()
+        self._build_classroom_delete_dialog()
+        self._build_school_year_delete_dialog()
+        self._build_staff_delete_dialog()
+
+    def _build_user_delete_dialog(self):
+        """Build user delete dialog"""
+        self.delete_user_motive_field = TextField(
+            label=self.get_text("motive"),
+            hint_text=self.get_text("enter_motive"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=True,
+            multiline=True,
+            min_lines=2,
+            max_lines=5,
+        )
+
+        self.user_name_to_be_deleted = Text(
+            value="",
+            weight=FontWeight.BOLD,
+            size=16,
+        )
+
+        self.delete_user_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("delete_user"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.CANCEL_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text(
+                            self.get_text("confirm_delete_user"),
+                            size=14,
+                            color=Constants.PRIMARY_COLOR,
+                        ),
+                        self.user_name_to_be_deleted,
+                        self.delete_user_motive_field,
+                    ],
+                    spacing=15,
+                    tight=True,
+                    horizontal_alignment=CrossAxisAlignment.STRETCH,
+                ),
+                width=400,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_user_delete_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("delete")),
+                    on_click=self._confirm_delete_user,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def _build_classroom_delete_dialog(self):
+        """Build classroom delete dialog"""
+        self.delete_classroom_motive_field = TextField(
+            label=self.get_text("motive"),
+            hint_text=self.get_text("enter_motive"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=True,
+            multiline=True,
+            min_lines=2,
+            max_lines=5,
+        )
+
+        self.classroom_name_to_be_deleted = Text(
+            value="",
+            weight=FontWeight.BOLD,
+            size=16,
+        )
+
+        self.delete_classroom_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("delete_classroom"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.CANCEL_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text(
+                            self.get_text("confirm_delete_classroom"),
+                            size=14,
+                            color=Constants.PRIMARY_COLOR,
+                        ),
+                        self.classroom_name_to_be_deleted,
+                        self.delete_classroom_motive_field,
+                    ],
+                    spacing=15,
+                    tight=True,
+                    horizontal_alignment=CrossAxisAlignment.STRETCH,
+                ),
+                width=400,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_classroom_delete_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("delete")),
+                    on_click=self._confirm_delete_classroom,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def _build_school_year_delete_dialog(self):
+        """Build school year delete dialog"""
+        self.delete_school_year_motive_field = TextField(
+            label=self.get_text("motive"),
+            hint_text=self.get_text("enter_motive"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=True,
+            multiline=True,
+            min_lines=2,
+            max_lines=5,
+        )
+
+        self.school_year_name_to_be_deleted = Text(
+            value="",
+            weight=FontWeight.BOLD,
+            size=16,
+        )
+
+        self.delete_school_year_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("delete_school_year"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.CANCEL_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text(
+                            self.get_text("confirm_delete_school_year"),
+                            size=14,
+                            color=Constants.PRIMARY_COLOR,
+                        ),
+                        self.school_year_name_to_be_deleted,
+                        self.delete_school_year_motive_field,
+                    ],
+                    spacing=15,
+                    tight=True,
+                    horizontal_alignment=CrossAxisAlignment.STRETCH,
+                ),
+                width=400,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_school_year_delete_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("delete")),
+                    on_click=self._confirm_delete_school_year,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def _build_staff_delete_dialog(self):
+        """Build staff delete dialog"""
+        self.delete_staff_motive_field = TextField(
+            label=self.get_text("motive"),
+            hint_text=self.get_text("enter_motive"),
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=True,
+            multiline=True,
+            min_lines=2,
+            max_lines=5,
+        )
+
+        self.staff_name_to_be_deleted = Text(
+            value="",
+            weight=FontWeight.BOLD,
+            size=16,
+        )
+
+        self.delete_staff_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("delete_staff"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.CANCEL_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text(
+                            self.get_text("confirm_delete_staff"),
+                            size=14,
+                            color=Constants.PRIMARY_COLOR,
+                        ),
+                        self.staff_name_to_be_deleted,
+                        self.delete_staff_motive_field,
+                    ],
+                    spacing=15,
+                    tight=True,
+                    horizontal_alignment=CrossAxisAlignment.STRETCH,
+                ),
+                width=400,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_staff_delete_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.get_text("delete")),
+                    on_click=self._confirm_delete_staff,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    # Dialog open methods for delete
+    def _open_user_delete_dialog(self, user: UserModel):
+        """Open user delete dialog"""
+        if not user:
+            return
+
+        # Store current deleting user ID
+        self.current_deleting_user_id = user.id_user
+
+        # Set user name
+        self.user_name_to_be_deleted.value = user.username
+
+        # Clear motive field
+        self.delete_user_motive_field.value = ""
+
+        # Open dialog
+        self.page.show_dialog(self.delete_user_dialog)
+        self.page.update()
+
+    def _open_classroom_delete_dialog(self, classroom: ClassroomModel):
+        """Open classroom delete dialog"""
+        if not classroom:
+            return
+
+        # Store current deleting classroom ID
+        self.current_deleting_classroom_id = classroom.id_classroom
+
+        # Set classroom name
+        self.classroom_name_to_be_deleted.value = classroom.name
+
+        # Clear motive field
+        self.delete_classroom_motive_field.value = ""
+
+        # Open dialog
+        self.page.show_dialog(self.delete_classroom_dialog)
+        self.page.update()
+
+    def _open_school_year_delete_dialog(self, school_year: SchoolYearModel):
+        """Open school year delete dialog"""
+        if not school_year:
+            return
+
+        # Store current deleting school year ID
+        self.current_deleting_school_year_id = school_year.id_school_year
+
+        # Set school year name
+        self.school_year_name_to_be_deleted.value = school_year.name
+
+        # Clear motive field
+        self.delete_school_year_motive_field.value = ""
+
+        # Open dialog
+        self.page.show_dialog(self.delete_school_year_dialog)
+        self.page.update()
+
+    def _open_staff_delete_dialog(self, staff: StaffModel):
+        """Open staff delete dialog"""
+        if not staff:
+            return
+
+        # Store current deleting staff ID
+        self.current_deleting_staff_id = staff.id_staff
+
+        # Set staff name
+        full_name = f"{staff.first_name} {staff.last_name}"
+        self.staff_name_to_be_deleted.value = full_name
+
+        # Clear motive field
+        self.delete_staff_motive_field.value = ""
+
+        # Open dialog
+        self.page.show_dialog(self.delete_staff_dialog)
+        self.page.update()
+
+    # Dialog close methods for delete
+    def _close_user_delete_dialog(self, e=None):
+        """Close user delete dialog"""
+        self.delete_user_dialog.open = False
+        self.page.update()
+
+    def _close_classroom_delete_dialog(self, e=None):
+        """Close classroom delete dialog"""
+        self.delete_classroom_dialog.open = False
+        self.page.update()
+
+    def _close_school_year_delete_dialog(self, e=None):
+        """Close school year delete dialog"""
+        self.delete_school_year_dialog.open = False
+        self.page.update()
+
+    def _close_staff_delete_dialog(self, e=None):
+        """Close staff delete dialog"""
+        self.delete_staff_dialog.open = False
+        self.page.update()
+
+    # Confirm delete methods
+    async def _confirm_delete_user(self, e):
+        """Confirm deletion of user"""
+        # Validate motive
+        if (
+            not self.delete_user_motive_field.value
+            or not self.delete_user_motive_field.value.strip()
+        ):
+            return
+
+        # Remove user from local data
+        self.users_data = [
+            u for u in self.users_data if u.id_user != self.current_deleting_user_id
+        ]
+
+        # TODO: Call API to delete user
+        # success = await self.services.delete_user(self.current_deleting_user_id, self.delete_user_motive_field.value)
+
+        # Close dialog
+        self._close_user_delete_dialog()
+
+        # Refresh table
+        await self._update_user_table()
+
+    async def _confirm_delete_classroom(self, e):
+        """Confirm deletion of classroom"""
+        # Validate motive
+        if (
+            not self.delete_classroom_motive_field.value
+            or not self.delete_classroom_motive_field.value.strip()
+        ):
+            return
+
+        # Remove classroom from local data
+        self.classrooms_data = [
+            c
+            for c in self.classrooms_data
+            if c.id_classroom != self.current_deleting_classroom_id
+        ]
+
+        # TODO: Call API to delete classroom
+        # success = await self.services.delete_classroom(self.current_deleting_classroom_id, self.delete_classroom_motive_field.value)
+
+        # Close dialog
+        self._close_classroom_delete_dialog()
+
+        # Refresh table
+        self._update_classroom_table()
+
+    async def _confirm_delete_school_year(self, e):
+        """Confirm deletion of school year"""
+        # Validate motive
+        if (
+            not self.delete_school_year_motive_field.value
+            or not self.delete_school_year_motive_field.value.strip()
+        ):
+            return
+
+        # Remove school year from local data
+        self.school_year_data = [
+            sy
+            for sy in self.school_year_data
+            if sy.id_school_year != self.current_deleting_school_year_id
+        ]
+
+        # TODO: Call API to delete school year
+        # success = await self.services.delete_school_year(self.current_deleting_school_year_id, self.delete_school_year_motive_field.value)
+
+        # Close dialog
+        self._close_school_year_delete_dialog()
+
+        # Refresh table
+        self._update_school_year_table()
+
+    async def _confirm_delete_staff(self, e):
+        """Confirm deletion of staff"""
+        # Validate motive
+        if (
+            not self.delete_staff_motive_field.value
+            or not self.delete_staff_motive_field.value.strip()
+        ):
+            return
+
+        # Remove staff from local data
+        self.staff_data = [
+            s for s in self.staff_data if s.id_staff != self.current_deleting_staff_id
+        ]
+
+        # TODO: Call API to delete staff
+        # success = await self.services.delete_staff(self.current_deleting_staff_id, self.delete_staff_motive_field.value)
+
+        # Close dialog
+        self._close_staff_delete_dialog()
+
+        # Refresh table
+        self._update_staff_table()
 
     #################################################################
     # ----------------------  TABLES -------------------------------#
@@ -1021,17 +2123,17 @@ class AdminScreen:
                                     icon=Icons.EDIT,
                                     icon_color=Constants.PRIMARY_COLOR,
                                     tooltip=self.get_text("edit"),
-                                    # on_click=lambda e, s=student: self._open_edit_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, u=user: self._open_user_edit_dialog(
+                                        u
+                                    ),
                                 ),
                                 IconButton(
                                     icon=Icons.DELETE,
                                     icon_color=Constants.CANCEL_COLOR,
                                     tooltip=self.get_text("delete"),
-                                    # on_click=lambda e, s=student: self._open_delete_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, u=user: self._open_user_delete_dialog(
+                                        u
+                                    ),
                                 ),
                             ],
                             spacing=5,
@@ -1164,17 +2266,17 @@ class AdminScreen:
                                     icon=Icons.EDIT,
                                     icon_color=Constants.PRIMARY_COLOR,
                                     tooltip=self.get_text("edit"),
-                                    # on_click=lambda e, s=student: self._open_edit_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, c=classroom: self._open_classroom_edit_dialog(
+                                        c
+                                    ),
                                 ),
                                 IconButton(
                                     icon=Icons.DELETE,
                                     icon_color=Constants.CANCEL_COLOR,
                                     tooltip=self.get_text("delete"),
-                                    # on_click=lambda e, s=student: self._open_delete_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, c=classroom: self._open_classroom_delete_dialog(
+                                        c
+                                    ),
                                 ),
                             ],
                             spacing=5,
@@ -1347,17 +2449,17 @@ class AdminScreen:
                                     icon=Icons.EDIT,
                                     icon_color=Constants.PRIMARY_COLOR,
                                     tooltip=self.get_text("edit"),
-                                    # on_click=lambda e, s=student: self._open_edit_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, sy=school_year: self._open_school_year_edit_dialog(
+                                        sy
+                                    ),
                                 ),
                                 IconButton(
                                     icon=Icons.DELETE,
                                     icon_color=Constants.CANCEL_COLOR,
                                     tooltip=self.get_text("delete"),
-                                    # on_click=lambda e, s=student: self._open_delete_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, sy=school_year: self._open_school_year_delete_dialog(
+                                        sy
+                                    ),
                                 ),
                             ],
                             spacing=5,
@@ -1522,17 +2624,17 @@ class AdminScreen:
                                     icon=Icons.EDIT,
                                     icon_color=Constants.PRIMARY_COLOR,
                                     tooltip=self.get_text("edit"),
-                                    # on_click=lambda e, s=student: self._open_edit_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, s=staff: self._open_staff_edit_dialog(
+                                        s
+                                    ),
                                 ),
                                 IconButton(
                                     icon=Icons.DELETE,
                                     icon_color=Constants.CANCEL_COLOR,
                                     tooltip=self.get_text("delete"),
-                                    # on_click=lambda e, s=student: self._open_delete_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, s=staff: self._open_staff_delete_dialog(
+                                        s
+                                    ),
                                 ),
                             ],
                             spacing=5,
