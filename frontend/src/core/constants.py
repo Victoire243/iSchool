@@ -1,6 +1,3 @@
-from tkinter.messagebox import CANCEL
-
-
 class Constants:
     APP_NAME = "iSchool"
     VERSION = "1.0.0"
@@ -16,4 +13,9 @@ class Constants:
     AVAILABLE_LANGUAGES = {
         "en": "English",
         "fr": "Français",
+        "es": "Español",
+        "it": "Italiano",
+        "ln": "Lingala",
+        "sw": "Kiswahili",
+        "ru": " Русский",
     }

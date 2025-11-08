@@ -58,7 +58,7 @@ class AppState:
         try:
             import json
 
-            with open(f"langs/{language}.json") as f:
+            with open(f"langs/{language}.json", encoding="utf-8") as f:
                 translations = f.read()
                 self.translations = json.loads(translations)
                 return json.loads(translations)

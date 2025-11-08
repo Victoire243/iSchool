@@ -26,7 +26,7 @@ class MainAppp:
 
         self._load_screens()
 
-    def _load_screens(self):
+    def _load_screens(self, is_language_change: bool = False):
         self.login_screen = LoginScreen(
             appState=self.app_state,
             on_login_success=self.on_login_success,
@@ -52,16 +52,17 @@ class MainAppp:
 
         self.admin_screen = AdminScreen(app_state=self.app_state, page=self.page)
 
-        # self._setup_screen(self.login_screen.build_page())
-        # For testing purposes, directly show main layout
-        self.app_state.current_user = UserModel(
-            id_user=1,
-            username="admin",
-            email="admin@example.com",
-            password="admin",
-            role_id=1,
-        )
-        self.on_login_success(self.app_state)
+        if not is_language_change:
+            # self._setup_screen(self.login_screen.build_page())
+            # For testing purposes, directly show main layout
+            self.app_state.current_user = UserModel(
+                id_user=1,
+                username="admin",
+                email="admin@example.com",
+                password="admin",
+                role_id=1,
+            )
+            self.on_login_success(self.app_state)
 
     def _setup_screen(self, screen: Control):
 
@@ -93,6 +94,7 @@ class MainAppp:
         self.app_state.translations = self.app_state.load_translations(e.control.value)
         self.translations = self.app_state.translations
         self.init_ui_components()
+        self._load_screens(is_language_change=True)
         self.show_main_layout()
 
     def init_ui_components(self):
