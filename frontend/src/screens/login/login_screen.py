@@ -68,11 +68,13 @@ class LoginScreen:
         )
 
         self.menu_language = Dropdown(
-            text="Français" if self.app_state.current_language == "fr" else "English",
-            label="Langue" if self.app_state.current_language == "fr" else "Language",
+            text=Constants.AVAILABLE_LANGUAGES.get(
+                self.app_state.current_language, "Français"
+            ),
+            label=self.get_text("language"),
             options=[
-                DropdownOption(key="fr", text="Français"),
-                DropdownOption(key="en", text="English"),
+                DropdownOption(key=k, text=Constants.AVAILABLE_LANGUAGES.get(k))
+                for k in Constants.AVAILABLE_LANGUAGES.keys()
             ],
             align=Alignment.BOTTOM_RIGHT,
             margin=Margin.only(right=20, bottom=20),
@@ -180,7 +182,7 @@ class LoginScreen:
         self.container.update()
 
     def get_text(self, key: str):
-        return self.translations.get(key, key)
+        return self.app_state.translations.get(key, key)
 
     def build_page(self) -> Control:
         return Stack(

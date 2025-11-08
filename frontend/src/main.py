@@ -100,11 +100,13 @@ class MainAppp:
 
         # Menu langue
         self.menu_language = Dropdown(
-            text="Français" if self.app_state.current_language == "fr" else "English",
-            label="Langue" if self.app_state.current_language == "fr" else "Language",
+            text=Constants.AVAILABLE_LANGUAGES.get(
+                self.app_state.current_language, "Français"
+            ),
+            label=self.get_text("language"),
             options=[
-                DropdownOption(key="fr", text="Français"),
-                DropdownOption(key="en", text="English"),
+                DropdownOption(key=k, text=Constants.AVAILABLE_LANGUAGES.get(k))
+                for k in Constants.AVAILABLE_LANGUAGES.keys()
             ],
             align=Alignment.CENTER_LEFT,
             margin=Margin.only(right=20, bottom=20),

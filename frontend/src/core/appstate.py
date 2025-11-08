@@ -6,6 +6,7 @@ import flet as ft
 from data.api.fake_client import FakeApiClient
 from typing import Callable, Awaitable
 from models.user_model import UserModel
+from .constants import Constants
 
 
 class AppState:
@@ -50,10 +51,12 @@ class AppState:
 
     def load_translations(self, language: str) -> dict:
         """Changer la langue de l'application"""
+        if (language not in Constants.AVAILABLE_LANGUAGES) or (not language):
+            language = "fr"  # Langue par défaut
+        else:
+            language = language.lower()
         try:
             import json
-
-            language = "fr" if not language else language.lower()
 
             with open(f"langs/{language}.json") as f:
                 translations = f.read()

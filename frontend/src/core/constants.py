@@ -13,3 +13,7 @@ class Constants:
     # Storage keys
     STORAGE_KEY_IS_LOGGED_IN = "is_logged_in"
     STORAGE_KEY_FIRST_LAUNCH = "first_launch"
+    AVAILABLE_LANGUAGES = {
+        "en": "English",
+        "fr": "Français",
+    }
