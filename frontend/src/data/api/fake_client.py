@@ -243,6 +243,117 @@ class FakeApiClient:
         rows = await self._fetch_all("SELECT * FROM cash_register ORDER BY date DESC")
         return [CashRegisterModel(**dict(row)) for row in rows]
 
+    async def filter_cash_register_entries(
+        self, start_date: str | None = None, end_date: str | None = None, entry_type: str | None = None
+    ) -> List[CashRegisterModel]:
+        """Filter cash register entries by date range and/or type."""
+        query = "SELECT * FROM cash_register WHERE 1=1"
+        params = []
+        
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+        if entry_type:
+            query += " AND type = ?"
+            params.append(entry_type)
+        
+        query += " ORDER BY date DESC"
+        rows = await self._fetch_all(query, params)
+        return [CashRegisterModel(**dict(row)) for row in rows]
+
+    async def get_cash_register_statistics(self) -> Dict[str, float]:
+        """Get cash register statistics (total income, expenses, balance)."""
+        stats = {}
+        
+        # Total income (Entrée)
+        stats["total_income"] = await self._scalar(
+            "SELECT COALESCE(SUM(amount), 0) FROM cash_register WHERE type = 'Entrée'"
+        ) or 0.0
+        
+        # Total expenses (Sortie)
+        stats["total_expenses"] = await self._scalar(
+            "SELECT COALESCE(SUM(amount), 0) FROM cash_register WHERE type = 'Sortie'"
+        ) or 0.0
+        
+        # Balance
+        stats["balance"] = stats["total_income"] - stats["total_expenses"]
+        
+        # Entry counts
+        stats["income_count"] = await self._scalar(
+            "SELECT COUNT(*) FROM cash_register WHERE type = 'Entrée'"
+        ) or 0.0
+        stats["expense_count"] = await self._scalar(
+            "SELECT COUNT(*) FROM cash_register WHERE type = 'Sortie'"
+        ) or 0.0
+        
+        return stats
+
+    async def create_cash_register_entry(
+        self,
+        school_year_id: int,
+        date: str,
+        entry_type: str,
+        description: str,
+        amount: float,
+        user_id: int,
+    ) -> CashRegisterModel:
+        """Create a new cash register entry."""
+        connection = await self._ensure_connection()
+        async with connection.execute(
+            """
+            INSERT INTO cash_register (school_year_id, date, type, description, amount, user_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (school_year_id, date, entry_type, description, amount, user_id),
+        ) as cursor:
+            await connection.commit()
+            entry_id = cursor.lastrowid
+        
+        return CashRegisterModel(
+            id_cash=entry_id,
+            school_year_id=school_year_id,
+            date=date,
+            type=entry_type,
+            description=description,
+            amount=amount,
+            user_id=user_id,
+        )
+
+    async def update_cash_register_entry(
+        self,
+        id_cash: int,
+        school_year_id: int,
+        date: str,
+        entry_type: str,
+        description: str,
+        amount: float,
+        user_id: int,
+    ) -> bool:
+        """Update an existing cash register entry."""
+        connection = await self._ensure_connection()
+        async with connection.execute(
+            """
+            UPDATE cash_register
+            SET school_year_id = ?, date = ?, type = ?, description = ?, amount = ?, user_id = ?
+            WHERE id_cash = ?
+            """,
+            (school_year_id, date, entry_type, description, amount, user_id, id_cash),
+        ) as cursor:
+            await connection.commit()
+            return cursor.rowcount > 0
+
+    async def delete_cash_register_entry(self, id_cash: int) -> bool:
+        """Delete a cash register entry."""
+        connection = await self._ensure_connection()
+        async with connection.execute(
+            "DELETE FROM cash_register WHERE id_cash = ?", (id_cash,)
+        ) as cursor:
+            await connection.commit()
+            return cursor.rowcount > 0
+
     async def get_dashboard_summary(self) -> Dict[str, float]:
         summary: Dict[str, float] = {
             "total_students": await self._scalar("SELECT COUNT(*) FROM students"),

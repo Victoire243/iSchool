@@ -13,6 +13,7 @@ from screens import (
     PaymentScreen,
     AdminScreen,
     CheckoutScreen,
+    CashRegisterScreen,
 )
 from models import UserModel
 
@@ -53,6 +54,11 @@ class MainAppp:
 
         self.checkout_screen = CheckoutScreen(
             appState=self.app_state,
+            page=self.page,
+        )
+
+        self.cash_register_screen = CashRegisterScreen(
+            app_state=self.app_state,
             page=self.page,
         )
 
@@ -256,12 +262,12 @@ class MainAppp:
                 icon=Icon(
                     Icons.ACCOUNT_BALANCE_WALLET,
                     color=Colors.WHITE,
-                    tooltip=self.get_text("checkout"),
+                    tooltip=self.get_text("cash_register"),
                 ),
                 selected_icon=Icons.ACCOUNT_BALANCE_WALLET,
-                label=self.get_text("checkout"),
-                tooltip=self.get_text("checkout"),
-                data="checkout",
+                label=self.get_text("cash_register"),
+                tooltip=self.get_text("cash_register"),
+                data="cash_register",
             )
         )
 
@@ -354,8 +360,9 @@ class MainAppp:
             self.content_area.content = self.payment_screen.build()
             asyncio.create_task(self.payment_screen.on_mount())
 
-        elif selected_data == "checkout":
-            self.content_area.content = self.checkout_screen.build()
+        elif selected_data == "cash_register":
+            self.content_area.content = self.cash_register_screen.build()
+            asyncio.create_task(self.cash_register_screen.on_mount())
 
         elif selected_data == "reports":
             self.content_area.content = Container(
