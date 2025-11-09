@@ -1,10 +1,10 @@
 [project]
-name = "frontend"
+name = "iSchool"
 version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Flet developer", email = "you@example.com" }]
+authors = [{ name = "Victoire Kitenge", email = "yumakitenge243@gmail.com" }]
 dependencies = [
   "flet==0.70.0.dev5623",
   "faker>=25.0.0",
@@ -15,10 +15,10 @@ dependencies = [
 
 [tool.flet]
 # Docs: https://flet.dev/docs/publish
-org = "com.mycompany"
-product = "frontend"
-company = "Flet"
-copyright = "Copyright (C) 2025 by Flet"
+org = "com.vickiapp"
+product = "iSchool"
+company = "VicKi app"
+copyright = "Copyright (C) 2025 by VicKi App"
 
 [tool.flet.app]
 path = "src"
