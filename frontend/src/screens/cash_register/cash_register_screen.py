@@ -154,6 +154,7 @@ class CashRegisterScreen:
                                     [
                                         self.quick_entry_button,
                                         self.staff_payment_button,
+                                        self.export_button,
                                     ],
                                     spacing=10,
                                 ),
@@ -234,6 +235,19 @@ class CashRegisterScreen:
                 color="white",
             ),
             on_click=self._open_staff_payment_form,
+        )
+
+        # Export button
+        self.export_button = ElevatedButton(
+            text=self.get_text("export"),
+            icon=Icons.DOWNLOAD,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Colors.ORANGE,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self._export_entries,
         )
 
     def _build_filter_buttons(self):
@@ -435,6 +449,81 @@ class CashRegisterScreen:
 
     def _close_receipt_dialog(self, dialog):
         """Close receipt dialog"""
+        dialog.open = False
+        self.page.update()
+
+    # ========================================================================
+    # EXPORT FUNCTIONALITY
+    # ========================================================================
+
+    def _export_entries(self, e):
+        """Export current entries to CSV"""
+        # Get currently filtered entries
+        if self.current_filter == "all":
+            filtered_entries = self.entries_data
+        elif self.current_filter == "income":
+            filtered_entries = [e for e in self.entries_data if e.type == "Entrée"]
+        else:  # expense
+            filtered_entries = [e for e in self.entries_data if e.type == "Sortie"]
+
+        if not filtered_entries:
+            self.page.snack_bar = SnackBar(
+                content=Text(self.get_text("no_entries_to_export")),
+                bgcolor=Colors.ORANGE,
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        # Generate CSV
+        csv_content = self.services.export_entries_to_csv(filtered_entries)
+        
+        # Create a dialog to show export options
+        export_dialog = AlertDialog(
+            title=Text(self.get_text("export_entries"), weight=FontWeight.BOLD),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text(
+                            f"{self.get_text('total_entries')}: {len(filtered_entries)}",
+                            size=14,
+                        ),
+                        Divider(),
+                        Text(
+                            self.get_text("export_preview"),
+                            size=12,
+                            color=Colors.GREY_600,
+                        ),
+                        Container(
+                            content=Text(
+                                csv_content[:500] + "..." if len(csv_content) > 500 else csv_content,
+                                size=10,
+                                font_family="Courier New",
+                            ),
+                            bgcolor=Colors.GREY_100,
+                            padding=Padding.all(10),
+                            border_radius=BorderRadius.all(5),
+                        ),
+                    ],
+                    spacing=10,
+                    tight=True,
+                ),
+                width=600,
+            ),
+            actions=[
+                TextButton(
+                    text=self.get_text("close"),
+                    on_click=lambda e: self._close_export_dialog(export_dialog),
+                ),
+            ],
+        )
+
+        self.page.overlay.append(export_dialog)
+        export_dialog.open = True
+        self.page.update()
+
+    def _close_export_dialog(self, dialog):
+        """Close export dialog"""
         dialog.open = False
         self.page.update()
 

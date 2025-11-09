@@ -125,3 +125,47 @@ class CashRegisterServices:
         except Exception as e:
             print(f"Error loading staff payments: {e}")
             return (False, [])
+
+    def export_entries_to_csv(self, entries: List[CashRegisterModel]) -> str:
+        """Export entries to CSV format"""
+        import csv
+        from io import StringIO
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow(["ID", "Date", "Type", "Description", "Amount (FC)"])
+        
+        # Write data
+        for entry in entries:
+            writer.writerow([
+                entry.id_cash,
+                entry.date,
+                entry.type,
+                entry.description,
+                entry.amount
+            ])
+        
+        return output.getvalue()
+
+    def get_monthly_summary(self, entries: List[CashRegisterModel]) -> dict:
+        """Get monthly summary of entries"""
+        from collections import defaultdict
+        from datetime import datetime
+        
+        monthly_data = defaultdict(lambda: {"income": 0.0, "expense": 0.0})
+        
+        for entry in entries:
+            try:
+                date_obj = datetime.strptime(entry.date, "%Y-%m-%d")
+                month_key = date_obj.strftime("%Y-%m")
+                
+                if entry.type == "Entrée":
+                    monthly_data[month_key]["income"] += entry.amount
+                else:
+                    monthly_data[month_key]["expense"] += entry.amount
+            except:
+                continue
+        
+        return dict(monthly_data)

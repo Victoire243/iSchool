@@ -291,5 +291,10 @@
     "delete_entry_confirm":"Êtes-vous sûr de vouloir supprimer cette entrée ?",
     "receipt":"Reçu",
     "print_receipt":"Imprimer le reçu",
-    "thank_you":"Merci pour votre transaction"
+    "thank_you":"Merci pour votre transaction",
+    "export":"Exporter",
+    "export_entries":"Exporter les Entrées",
+    "total_entries":"Total des entrées",
+    "export_preview":"Aperçu de l'export",
+    "no_entries_to_export":"Aucune entrée à exporter"
 }
