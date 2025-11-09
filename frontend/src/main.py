@@ -12,6 +12,7 @@ from screens import (
     StudentsScreen,
     PaymentScreen,
     AdminScreen,
+    CheckoutScreen,
 )
 from models import UserModel
 
@@ -47,6 +48,11 @@ class MainAppp:
 
         self.payment_screen = PaymentScreen(
             app_state=self.app_state,
+            page=self.page,
+        )
+
+        self.checkout_screen = CheckoutScreen(
+            appState=self.app_state,
             page=self.page,
         )
 
@@ -349,9 +355,7 @@ class MainAppp:
             asyncio.create_task(self.payment_screen.on_mount())
 
         elif selected_data == "checkout":
-            self.content_area.content = Container(
-                content=Text("Gestion de la Caisse en cours de développement")
-            )
+            self.content_area.content = self.checkout_screen.build()
 
         elif selected_data == "reports":
             self.content_area.content = Container(
