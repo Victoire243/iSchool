@@ -163,7 +163,7 @@ class CheckoutScreen:
                 CheckoutComponents.create_action_button(
                     text=self.get_text("staff_payment"),
                     icon=Icons.PAYMENTS,
-                    color=Constants.SECONDARY_COLOR,
+                    color=Constants.PRIMARY_COLOR,
                     on_click=self.toggle_staff_payment_form,
                     tooltip=self.get_text("pay_staff_tooltip"),
                 ),
