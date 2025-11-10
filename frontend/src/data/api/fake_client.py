@@ -243,6 +243,163 @@ class FakeApiClient:
         rows = await self._fetch_all("SELECT * FROM cash_register ORDER BY date DESC")
         return [CashRegisterModel(**dict(row)) for row in rows]
 
+    async def create_cash_register_entry(
+        self,
+        school_year_id: int,
+        date: str,
+        type: str,
+        description: str,
+        amount: float,
+        user_id: int,
+    ) -> CashRegisterModel:
+        """Create a new cash register entry"""
+        connection = await self._ensure_connection()
+        async with connection.execute(
+            """
+            INSERT INTO cash_register (school_year_id, date, type, description, amount, user_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (school_year_id, date, type, description, amount, user_id),
+        ) as cursor:
+            await connection.commit()
+            new_id = cursor.lastrowid
+        return CashRegisterModel(
+            id_cash=new_id,
+            school_year_id=school_year_id,
+            date=date,
+            type=type,
+            description=description,
+            amount=amount,
+            user_id=user_id,
+        )
+
+    async def get_cash_register_statistics(
+        self, school_year_id: int | None = None
+    ) -> Dict[str, float]:
+        """Get cash register statistics"""
+        if school_year_id:
+            total_in = await self._scalar(
+                "SELECT SUM(amount) FROM cash_register WHERE type = 'Entrée' AND school_year_id = ?",
+                (school_year_id,),
+            )
+            total_out = await self._scalar(
+                "SELECT SUM(amount) FROM cash_register WHERE type = 'Sortie' AND school_year_id = ?",
+                (school_year_id,),
+            )
+        else:
+            total_in = await self._scalar(
+                "SELECT SUM(amount) FROM cash_register WHERE type = 'Entrée'"
+            )
+            total_out = await self._scalar(
+                "SELECT SUM(amount) FROM cash_register WHERE type = 'Sortie'"
+            )
+
+        balance = (total_in or 0.0) - (total_out or 0.0)
+
+        return {
+            "total_in": total_in or 0.0,
+            "total_out": total_out or 0.0,
+            "balance": balance,
+        }
+
+    async def create_expense(
+        self,
+        school_year_id: int,
+        expense_date: str,
+        description: str,
+        amount: float,
+        user_id: int,
+    ) -> ExpenseModel:
+        """Create a new expense and register it in cash register"""
+        connection = await self._ensure_connection()
+
+        # Create expense
+        async with connection.execute(
+            """
+            INSERT INTO expenses (school_year_id, expense_date, description, amount, user_id)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (school_year_id, expense_date, description, amount, user_id),
+        ) as cursor:
+            await connection.commit()
+            expense_id = cursor.lastrowid
+
+        # Create cash register entry
+        await connection.execute(
+            """
+            INSERT INTO cash_register (school_year_id, date, type, description, amount, user_id)
+            VALUES (?, ?, 'Sortie', ?, ?, ?)
+            """,
+            (school_year_id, expense_date, f"Dépense: {description}", amount, user_id),
+        )
+        await connection.commit()
+
+        return ExpenseModel(
+            id_expense=expense_id,
+            school_year_id=school_year_id,
+            expense_date=expense_date,
+            description=description,
+            amount=amount,
+            user_id=user_id,
+        )
+
+    async def create_staff_payment(
+        self,
+        staff_id: int,
+        school_year_id: int,
+        amount: float,
+        payment_date: str,
+        user_id: int,
+    ) -> StaffPaymentModel:
+        """Create a new staff payment and register it in cash register"""
+        connection = await self._ensure_connection()
+
+        # Get staff name
+        staff_row = await self._fetch_one(
+            "SELECT first_name, last_name FROM staff WHERE id_staff = ?", (staff_id,)
+        )
+        staff_name = (
+            f"{staff_row['first_name']} {staff_row['last_name']}"
+            if staff_row
+            else "Unknown"
+        )
+
+        # Create staff payment
+        async with connection.execute(
+            """
+            INSERT INTO staff_payments (staff_id, school_year_id, amount, payment_date, user_id)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (staff_id, school_year_id, amount, payment_date, user_id),
+        ) as cursor:
+            await connection.commit()
+            payment_id = cursor.lastrowid
+
+        # Create cash register entry
+        await connection.execute(
+            """
+            INSERT INTO cash_register (school_year_id, date, type, description, amount, user_id)
+            VALUES (?, ?, 'Sortie', ?, ?, ?)
+            """,
+            (
+                school_year_id,
+                payment_date,
+                f"Paie du personnel: {staff_name}",
+                amount,
+                user_id,
+            ),
+        )
+        await connection.commit()
+
+        return StaffPaymentModel(
+            id_staff_payment=payment_id,
+            staff_id=staff_id,
+            school_year_id=school_year_id,
+            amount=amount,
+            payment_date=payment_date,
+            user_id=user_id,
+        )
+
     async def get_dashboard_summary(self) -> Dict[str, float]:
         summary: Dict[str, float] = {
             "total_students": await self._scalar("SELECT COUNT(*) FROM students"),

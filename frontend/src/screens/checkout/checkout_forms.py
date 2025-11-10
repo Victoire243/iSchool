@@ -1,0 +1,248 @@
+"""
+Checkout Forms Module
+Contains all form builders for the checkout screen
+"""
+
+from flet import *  # type: ignore
+from core import Constants
+from datetime import datetime
+
+
+class CheckoutForms:
+    """Form builders for checkout operations"""
+
+    def __init__(self, checkout_screen):
+        self.screen = checkout_screen
+
+    def build_quick_entry_form(self) -> Column:
+        """Build form for quick cash register entry"""
+        self.screen.entry_description_field = TextField(
+            label=self.screen.get_text("description_quick_entry"),
+            hint_text=self.screen.get_text("enter_description"),
+            border_color=Constants.PRIMARY_COLOR,
+            expand=True,
+        )
+
+        self.screen.entry_amount_field = TextField(
+            label=self.screen.get_text("amount"),
+            hint_text=self.screen.get_text("enter_amount"),
+            keyboard_type=KeyboardType.NUMBER,
+            border_color=Constants.PRIMARY_COLOR,
+            prefix=Text("$ "),
+            expand=True,
+        )
+
+        self.screen.entry_type_dropdown = Dropdown(
+            label=self.screen.get_text("transaction_type"),
+            hint_text=self.screen.get_text("select_type"),
+            border_color=Constants.PRIMARY_COLOR,
+            options=[
+                dropdown.Option("Entrée", self.screen.get_text("entry")),
+                dropdown.Option("Sortie", self.screen.get_text("exit")),
+            ],
+            value="Entrée",
+            expand=True,
+        )
+
+        return Column(
+            controls=[
+                Row(
+                    controls=[
+                        self.screen.entry_type_dropdown,
+                    ],
+                ),
+                Row(
+                    controls=[
+                        self.screen.entry_description_field,
+                    ],
+                ),
+                Row(
+                    controls=[
+                        self.screen.entry_amount_field,
+                    ],
+                ),
+                Row(
+                    controls=[
+                        Button(
+                            content=self.screen.get_text("submit"),
+                            icon=Icons.SAVE,
+                            style=ButtonStyle(
+                                shape=RoundedRectangleBorder(radius=5),
+                                bgcolor=Constants.PRIMARY_COLOR,
+                                padding=Padding(10, 20, 10, 20),
+                                color="white",
+                            ),
+                            on_click=self.screen.form_handlers.handle_quick_entry_submit,
+                        ),
+                        Button(
+                            content=self.screen.get_text("cancel"),
+                            icon=Icons.CANCEL,
+                            style=ButtonStyle(
+                                shape=RoundedRectangleBorder(radius=5),
+                                bgcolor=Constants.CANCEL_COLOR,
+                                padding=Padding(10, 20, 10, 20),
+                                color="white",
+                            ),
+                            on_click=self.screen.toggle_quick_entry_form,
+                        ),
+                    ],
+                    alignment=MainAxisAlignment.END,
+                    spacing=10,
+                ),
+            ],
+            spacing=15,
+        )
+
+    def build_quick_expense_form(self) -> Column:
+        """Build form for quick expense"""
+        self.screen.expense_description_field = TextField(
+            label=self.screen.get_text("description_quick_expense"),
+            hint_text=self.screen.get_text("enter_expense_description"),
+            border_color=Constants.PRIMARY_COLOR,
+            expand=True,
+            multiline=True,
+            min_lines=2,
+            max_lines=4,
+        )
+
+        self.screen.expense_amount_field = TextField(
+            label=self.screen.get_text("amount"),
+            hint_text=self.screen.get_text("enter_amount"),
+            keyboard_type=KeyboardType.NUMBER,
+            border_color=Constants.PRIMARY_COLOR,
+            prefix=Text("$ "),
+            expand=True,
+        )
+
+        return Column(
+            controls=[
+                Row(
+                    controls=[
+                        self.screen.expense_description_field,
+                    ],
+                ),
+                Row(
+                    controls=[
+                        self.screen.expense_amount_field,
+                    ],
+                ),
+                Row(
+                    controls=[
+                        Button(
+                            content=self.screen.get_text("submit"),
+                            icon=Icons.SHOPPING_CART,
+                            style=ButtonStyle(
+                                shape=RoundedRectangleBorder(radius=5),
+                                bgcolor=Constants.PRIMARY_COLOR,
+                                padding=Padding(10, 20, 10, 20),
+                                color="white",
+                            ),
+                            on_click=self.screen.form_handlers.handle_quick_expense_submit,
+                        ),
+                        Button(
+                            content=self.screen.get_text("cancel"),
+                            icon=Icons.CANCEL,
+                            style=ButtonStyle(
+                                shape=RoundedRectangleBorder(radius=5),
+                                bgcolor=Constants.CANCEL_COLOR,
+                                padding=Padding(10, 20, 10, 20),
+                                color="white",
+                            ),
+                            on_click=self.screen.toggle_quick_expense_form,
+                        ),
+                    ],
+                    alignment=MainAxisAlignment.END,
+                    spacing=10,
+                ),
+            ],
+            spacing=15,
+        )
+
+    def build_staff_payment_form(self) -> Column:
+        """Build form for staff payment"""
+        self.screen.staff_dropdown = Dropdown(
+            label=self.screen.get_text("select_staff"),
+            hint_text=self.screen.get_text("choose_staff_member"),
+            border_color=Constants.PRIMARY_COLOR,
+            options=[],
+            expand=True,
+        )
+
+        self.screen.staff_payment_amount_field = TextField(
+            label=self.screen.get_text("payment_amount"),
+            hint_text=self.screen.get_text("enter_payment_amount"),
+            keyboard_type=KeyboardType.NUMBER,
+            border_color=Constants.PRIMARY_COLOR,
+            prefix=Text("$ "),
+            expand=True,
+        )
+
+        self.screen.staff_payment_date_field = TextField(
+            label=self.screen.get_text("payment_date"),
+            hint_text=self.screen.get_text("payment_date_hint"),
+            border_color=Constants.PRIMARY_COLOR,
+            value=datetime.now().strftime("%Y-%m-%d"),
+            read_only=True,
+            expand=True,
+        )
+
+        return Column(
+            controls=[
+                Row(
+                    controls=[
+                        self.screen.staff_dropdown,
+                    ],
+                ),
+                Row(
+                    controls=[
+                        self.screen.staff_payment_amount_field,
+                        self.screen.staff_payment_date_field,
+                    ],
+                    spacing=10,
+                ),
+                Row(
+                    controls=[
+                        Button(
+                            content=self.screen.get_text("pay_staff"),
+                            icon=Icons.PAYMENTS,
+                            style=ButtonStyle(
+                                shape=RoundedRectangleBorder(radius=5),
+                                bgcolor=Constants.PRIMARY_COLOR,
+                                padding=Padding(10, 20, 10, 20),
+                                color="white",
+                            ),
+                            on_click=self.screen.form_handlers.handle_staff_payment_submit,
+                        ),
+                        Button(
+                            content=self.screen.get_text("cancel"),
+                            icon=Icons.CANCEL,
+                            style=ButtonStyle(
+                                shape=RoundedRectangleBorder(radius=5),
+                                bgcolor=Constants.CANCEL_COLOR,
+                                padding=Padding(10, 20, 10, 20),
+                                color="white",
+                            ),
+                            on_click=self.screen.toggle_staff_payment_form,
+                        ),
+                    ],
+                    alignment=MainAxisAlignment.END,
+                    spacing=10,
+                ),
+            ],
+            spacing=15,
+        )
+
+    def populate_staff_dropdown(self, staff_list):
+        """Populate staff dropdown with staff members"""
+        if hasattr(self.screen, "staff_dropdown"):
+            self.screen.staff_dropdown.options = [
+                dropdown.Option(
+                    str(staff.id_staff),
+                    f"{staff.first_name} {staff.last_name} - {staff.position}",
+                )
+                for staff in staff_list
+            ]
+            try:
+                self.screen.staff_dropdown.update()
+            except Exception:
+                pass
