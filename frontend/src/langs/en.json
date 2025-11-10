@@ -305,5 +305,7 @@
     "payment_date_hint":"Payment date",
     "pay_staff":"Pay Staff",
     "description_quick_entry":"Quick entry description",
-    "description_quick_expense":"Quick expense description"
+    "description_quick_expense":"Quick expense description",
+    "search_staff":"Search Staff",
+    "enter_staff_name":"Enter staff name"
 }

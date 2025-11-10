@@ -42,6 +42,9 @@ class CheckoutScreen:
         self.staff_list = []
         self.statistics = {"total_in": 0.0, "total_out": 0.0, "balance": 0.0}
 
+        # Selection state
+        self.selected_staff_id = None
+
         # Initialize modules
         self.forms = CheckoutForms(self)
         self.form_handlers = CheckoutFormHandlers(self)
@@ -118,10 +121,6 @@ class CheckoutScreen:
 
             # Update transactions table
             await self.tables.update_transactions_table()
-
-            # Populate staff dropdown if form exists
-            if hasattr(self, "staff_dropdown"):
-                self.forms.populate_staff_dropdown(self.staff_list)
 
             try:
                 self.main_content.update()
@@ -257,10 +256,6 @@ class CheckoutScreen:
         # Hide other forms
         self.quick_entry_form_container.visible = False
         self.quick_expense_form_container.visible = False
-
-        # Populate staff dropdown when opening
-        if self.staff_payment_form_container.visible:
-            self.forms.populate_staff_dropdown(self.staff_list)
 
         try:
             self.main_content.update()

@@ -160,12 +160,44 @@ class CheckoutForms:
 
     def build_staff_payment_form(self) -> Column:
         """Build form for staff payment"""
-        self.screen.staff_dropdown = Dropdown(
-            label=self.screen.get_text("select_staff"),
-            hint_text=self.screen.get_text("choose_staff_member"),
+        # Staff search field with suggestions
+        self.screen.staff_search_field = TextField(
+            label=self.screen.get_text("search_staff"),
+            hint_text=self.screen.get_text("enter_staff_name"),
+            on_change=self.screen.form_handlers.handle_staff_search_change,
+            prefix_icon=Icons.SEARCH,
+            suffix=IconButton(
+                icon=Icons.CLEAR,
+                tooltip=self.screen.get_text("clear"),
+                on_click=self.screen.form_handlers.clear_staff_search,
+            ),
             border_color=Constants.PRIMARY_COLOR,
-            options=[],
+            focused_border_color=Constants.PRIMARY_COLOR,
             expand=True,
+        )
+
+        # Container for staff suggestions
+        self.screen.suggestions_container_staff = Container(
+            visible=False,
+            width=400,
+            height=250,
+            bgcolor=Colors.WHITE,
+            border=Border.all(1, Colors.GREY_300),
+            border_radius=BorderRadius.all(5),
+            padding=Padding.all(5),
+        )
+
+        # Staff info display
+        self.screen.staff_position_text_info = Text(
+            value="",
+            size=14,
+            color=Constants.PRIMARY_COLOR,
+        )
+
+        self.screen.staff_contact_text_info = Text(
+            value="",
+            size=14,
+            color=Constants.PRIMARY_COLOR,
         )
 
         self.screen.staff_payment_amount_field = TextField(
@@ -188,10 +220,18 @@ class CheckoutForms:
 
         return Column(
             controls=[
+                Column(
+                    controls=[
+                        self.screen.staff_search_field,
+                        self.screen.suggestions_container_staff,
+                    ],
+                ),
                 Row(
                     controls=[
-                        self.screen.staff_dropdown,
+                        self.screen.staff_position_text_info,
+                        self.screen.staff_contact_text_info,
                     ],
+                    spacing=20,
                 ),
                 Row(
                     controls=[
@@ -232,17 +272,4 @@ class CheckoutForms:
             spacing=15,
         )
 
-    def populate_staff_dropdown(self, staff_list):
-        """Populate staff dropdown with staff members"""
-        if hasattr(self.screen, "staff_dropdown"):
-            self.screen.staff_dropdown.options = [
-                dropdown.Option(
-                    str(staff.id_staff),
-                    f"{staff.first_name} {staff.last_name} - {staff.position}",
-                )
-                for staff in staff_list
-            ]
-            try:
-                self.screen.staff_dropdown.update()
-            except Exception:
-                pass
+    # Removed populate_staff_dropdown method as we now use search
