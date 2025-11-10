@@ -356,6 +356,7 @@ class MainAppp:
 
         elif selected_data == "checkout":
             self.content_area.content = self.checkout_screen.build()
+            asyncio.create_task(self.checkout_screen.on_mount())
 
         elif selected_data == "reports":
             self.content_area.content = Container(
