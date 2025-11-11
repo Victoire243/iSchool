@@ -1,3 +1,4 @@
+from turtle import st
 from flet import *  # type: ignore
 from core import AppState, Constants
 from utils import Utils
@@ -1333,7 +1334,6 @@ class StudentsScreen:
 
         # Open the dialog
         self.page.show_dialog(self.edit_dialog)
-        self.page.update()
 
     def _open_delete_dialog(self, student: StudentModel):
         """Open delete dialog and populate with student data"""
@@ -1362,7 +1362,9 @@ class StudentsScreen:
 
         # Open the dialog
         self.page.show_dialog(self.delete_dialog)
-        self.page.update()
+
+    def close_dialog(self, e=None):
+        self.page.pop_dialog()
 
     def _close_edit_dialog(self, e=None):
         """Close the edit dialog"""
@@ -1373,6 +1375,54 @@ class StudentsScreen:
         """Close the delete dialog"""
         self.delete_dialog.open = False
         self.page.update()
+
+    def _show_student_details_dialog(self, student: StudentModel):
+        """Show student details dialog (TODO)"""
+
+        dialog_content = Column(
+            controls=[
+                Text(
+                    f"{self.get_text('student')}: {student.first_name} {student.last_name} {student.surname}",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('gender')}: {student.gender}",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('birth_date')}: {student.date_of_birth}",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('address')}: {student.address}",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('parent_contact')}: {student.parent_contact}",
+                    size=14,
+                ),
+            ],
+            spacing=10,
+        )
+
+        dialog = AlertDialog(
+            title=Text(self.get_text("student_details"), weight=FontWeight.BOLD),
+            content=dialog_content,
+            actions=[
+                TextButton(
+                    content=self.get_text("close"),
+                    icon=Icons.CLOSE,
+                    on_click=self.close_dialog,
+                ),
+            ],
+            scrollable=True,
+        )
+
+        self.page.show_dialog(dialog)
 
     async def _confirm_delete_student(self, e):
         """Confirm deletion of the student"""
@@ -1554,6 +1604,8 @@ class StudentsScreen:
                 ],
             ),
             bgcolor=row_color,
+            on_click=lambda e, s=student: self._show_student_details_dialog(s),
+            ink=True,
         )
 
     def _update_table(self):

@@ -326,5 +326,9 @@
     "processing_file":"Traitement du fichier...",
     "select_classroom_for_import":"Sélectionner la classe pour l'importation",
     "classroom_required":"La classe est obligatoire pour l'importation",
-    "browse_file":"Parcourir"
+    "browse_file":"Parcourir",
+    "student":"Élève",
+    "view_payment":"Voir le paiement",
+    "payment_details":"Détails du paiement",
+    "student_details":"Détails de l'élève"
 }

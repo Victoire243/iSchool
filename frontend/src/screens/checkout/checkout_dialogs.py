@@ -48,7 +48,8 @@ class CheckoutDialogs:
                         ),
                         Divider(height=1),
                         self._build_detail_row(
-                            self.screen.get_text("description"), entry.description
+                            self.screen.get_text("transaction_description"),
+                            entry.description,
                         ),
                         Divider(height=1),
                         self._build_detail_row(
@@ -70,10 +71,12 @@ class CheckoutDialogs:
                 ),
                 TextButton(
                     content=self.screen.get_text("close"),
+                    icon=Icons.CLOSE,
                     on_click=lambda e: self.screen.close_dialog(),
                 ),
             ],
             actions_alignment=MainAxisAlignment.SPACE_BETWEEN,
+            scrollable=True,
         )
 
     def build_receipt_dialog(self, entry) -> AlertDialog:
@@ -252,4 +255,5 @@ Montant: $ {entry.amount:,.0f}
                 ),
             ],
             alignment=MainAxisAlignment.SPACE_BETWEEN,
+            wrap=True,
         )

@@ -888,6 +888,68 @@ class PaymentScreen:
         except:
             return date_str
 
+    # --- Dialog methods
+    def close_dialog(self, e=None):
+        self.page.pop_dialog()
+
+    def _show_view_payment_dialog(self, payment: PaymentModel):
+        """Build the view payment dialog"""
+        student_name = self._get_student_name(payment.student_id)
+        classroom_name = self._get_classroom_name(payment.student_id)
+        payment_type_name = self._get_payment_type_name(payment.payment_type_id)
+        formatted_date = Utils.format_date(payment.payment_date)
+
+        dialog_content = Column(
+            controls=[
+                Text(
+                    f"{self.get_text('student')}: {student_name}",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('classroom')}: {classroom_name}",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('payment_type')}: {payment_type_name}",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('amount')}: {payment.amount:,.0f} FC",
+                    size=14,
+                ),
+                Divider(height=1),
+                Text(
+                    f"{self.get_text('payment_date')}: {formatted_date}",
+                    size=14,
+                ),
+            ],
+            spacing=10,
+        )
+
+        dialog = AlertDialog(
+            title=Text(self.get_text("payment_details"), weight=FontWeight.BOLD),
+            content=dialog_content,
+            actions=[
+                TextButton(
+                    content=self.get_text("print_receipt"),
+                    icon=Icons.PRINT,
+                    # on_click=lambda e: self.screen.print_receipt(entry),
+                ),
+                TextButton(
+                    content=self.get_text("close"),
+                    icon=Icons.CLOSE,
+                    on_click=self.close_dialog,
+                ),
+            ],
+            scrollable=True,
+            actions_alignment=MainAxisAlignment.SPACE_BETWEEN,
+        )
+
+        self.page.show_dialog(dialog)
+
     # --- Table creation methods ---
     def _create_table_header(self):
         """Create the table header row"""
@@ -1000,9 +1062,9 @@ class PaymentScreen:
                                     icon=Icons.VISIBILITY,
                                     icon_color=Constants.PRIMARY_COLOR,
                                     tooltip=self.get_text("view_payment"),
-                                    # on_click=lambda e, s=student: self._open_edit_dialog(
-                                    #     s
-                                    # ),
+                                    on_click=lambda e, p=payment: self._show_view_payment_dialog(
+                                        p
+                                    ),
                                 )
                             ]
                         ),
@@ -1016,6 +1078,8 @@ class PaymentScreen:
             border=Border(
                 bottom=BorderSide(1, Colors.GREY_200),
             ),
+            on_click=lambda e, p=payment: self._show_view_payment_dialog(p),
+            ink=True,
         )
 
     def _update_table(self):

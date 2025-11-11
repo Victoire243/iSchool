@@ -268,38 +268,32 @@ class CheckoutScreen:
 
     def show_transaction_details(self, entry):
         """Show transaction details dialog"""
+        # print(entry)
         dialog = self.dialogs.build_transaction_details_dialog(entry)
-        self.page.dialog = dialog
-        dialog.open = True
-        self.page.update()
+        self.page.show_dialog(dialog=dialog)
 
     def print_receipt(self, entry):
         """Show receipt preview dialog"""
         self.close_dialog()
         dialog = self.dialogs.build_receipt_dialog(entry)
-        self.page.dialog = dialog
-        dialog.open = True
-        self.page.update()
+        self.page.show_dialog(dialog=dialog)
 
     def show_success_dialog(self, message: str):
         """Show success dialog"""
         dialog = self.dialogs.build_success_dialog(message)
-        self.page.dialog = dialog
-        dialog.open = True
-        self.page.update()
+        self.page.show_dialog(dialog=dialog)
 
     def show_error_dialog(self, message: str):
         """Show error dialog"""
         dialog = self.dialogs.build_error_dialog(message)
-        self.page.dialog = dialog
-        dialog.open = True
-        self.page.update()
+        self.page.show_dialog(dialog=dialog)
 
     def close_dialog(self):
         """Close current dialog"""
-        if self.page.dialog:
-            self.page.dialog.open = False
-            self.page.update()
+        try:
+            self.page.pop_dialog()
+        except Exception:
+            pass
 
     # ========================================================================
     # MAIN UI COMPONENTS
