@@ -436,6 +436,117 @@ class FakeApiClient:
         totals["payments_count"] = float(len(payments))
         return totals
 
+    async def create_student(self, student: StudentModel) -> bool:
+        """Create a new student"""
+        connection = await self._ensure_connection()
+        try:
+            await connection.execute(
+                """
+                INSERT INTO students (first_name, last_name, surname, gender, 
+                                     date_of_birth, address, parent_contact)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    student.first_name,
+                    student.last_name,
+                    student.surname,
+                    student.gender,
+                    student.date_of_birth,
+                    student.address,
+                    student.parent_contact,
+                ),
+            )
+            await connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error creating student: {e}")
+            return False
+
+    async def import_students(
+        self, students_list: List[StudentModel], classroom_id: int
+    ) -> tuple[bool, int]:
+        """Import multiple students and enroll them in a classroom"""
+        connection = await self._ensure_connection()
+        imported_count = 0
+
+        try:
+            # Get active school year
+            active_year = await self.get_active_school_year()
+            if not active_year:
+                return False, 0
+
+            for student in students_list:
+                try:
+                    # Insert student
+                    cursor = await connection.execute(
+                        """
+                        INSERT INTO students (first_name, last_name, surname, gender, 
+                                             date_of_birth, address, parent_contact)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            student.first_name,
+                            student.last_name,
+                            student.surname,
+                            student.gender,
+                            student.date_of_birth,
+                            student.address,
+                            student.parent_contact,
+                        ),
+                    )
+                    student_id = cursor.lastrowid
+
+                    # Create enrollment
+                    await connection.execute(
+                        """
+                        INSERT INTO enrollments (student_id, classroom_id, school_year_id)
+                        VALUES (?, ?, ?)
+                        """,
+                        (student_id, classroom_id, active_year.id_school_year),
+                    )
+
+                    imported_count += 1
+                except Exception as e:
+                    print(
+                        f"Error importing student {student.first_name} {student.last_name}: {e}"
+                    )
+                    continue
+
+            await connection.commit()
+            return True, imported_count
+        except Exception as e:
+            print(f"Error during import: {e}")
+            await connection.rollback()
+            return False, imported_count
+
+    async def update_student(self, student: StudentModel) -> bool:
+        """Update an existing student"""
+        connection = await self._ensure_connection()
+        try:
+            await connection.execute(
+                """
+                UPDATE students 
+                SET first_name = ?, last_name = ?, surname = ?, gender = ?,
+                    date_of_birth = ?, address = ?, parent_contact = ?
+                WHERE id_student = ?
+                """,
+                (
+                    student.first_name,
+                    student.last_name,
+                    student.surname,
+                    student.gender,
+                    student.date_of_birth,
+                    student.address,
+                    student.parent_contact,
+                    student.id_student,
+                ),
+            )
+            await connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating student: {e}")
+            return False
+
     # ------------------------------------------------------------------
     # Low level helpers
     def _row_to_school_year(self, row: Row) -> SchoolYearModel:

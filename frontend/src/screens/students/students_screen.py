@@ -28,6 +28,7 @@ class StudentsScreen:
         self._build_table_components()
         self._build_edit_dialog()
         self._build_delete_dialog()
+        self._build_import_dialog()
 
     async def on_mount(self):
         self.translations = self.app_state.translations
@@ -688,6 +689,473 @@ class StudentsScreen:
             actions_alignment=MainAxisAlignment.END,
         )
 
+    def _build_import_dialog(self):
+        """Build the import students dialog"""
+
+        # File path display
+        self.import_file_path_text = Text(
+            value=self.get_text("no_file_selected"),
+            size=14,
+            color=Colors.GREY_600,
+            italic=True,
+        )
+
+        # File picker button
+        self.import_file_picker_button = Button(
+            content=Text(self.get_text("browse_file")),
+            icon=Icons.FOLDER_OPEN,
+            on_click=self._pick_import_file,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+        )
+
+        # File details container (hidden by default)
+        self.import_male_count_text = Text(value="0", size=20, weight=FontWeight.BOLD)
+        self.import_female_count_text = Text(value="0", size=20, weight=FontWeight.BOLD)
+        self.import_total_count_text = Text(value="0", size=20, weight=FontWeight.BOLD)
+
+        self.import_file_details_container = Container(
+            content=Column(
+                controls=[
+                    Text(
+                        self.get_text("file_details"),
+                        size=16,
+                        weight=FontWeight.BOLD,
+                        color=Constants.PRIMARY_COLOR,
+                    ),
+                    Divider(height=1, color=Constants.PRIMARY_COLOR),
+                    Row(
+                        controls=[
+                            self._create_detail_stat(
+                                self.get_text("total_records"),
+                                self.import_total_count_text,
+                                Icons.PEOPLE,
+                                Constants.PRIMARY_COLOR,
+                            ),
+                            self._create_detail_stat(
+                                self.get_text("male_count"),
+                                self.import_male_count_text,
+                                Icons.MALE,
+                                Colors.BLUE,
+                            ),
+                            self._create_detail_stat(
+                                self.get_text("female_count"),
+                                self.import_female_count_text,
+                                Icons.FEMALE,
+                                Colors.PINK,
+                            ),
+                        ],
+                        alignment=MainAxisAlignment.SPACE_AROUND,
+                        spacing=10,
+                    ),
+                ],
+                spacing=10,
+            ),
+            visible=False,
+            padding=Padding.all(15),
+            border_radius=BorderRadius.all(10),
+            bgcolor="#e8f4f8",
+            margin=Margin(top=10, bottom=10),
+        )
+
+        # Classroom dropdown for import
+        self.import_classroom_dropdown = Dropdown(
+            label=self.get_text("select_classroom_for_import"),
+            border_radius=BorderRadius.all(5),
+            options=[],
+            helper_text=self.get_text("classroom_required"),
+            # width=float("inf"),
+        )
+
+        # Import button (disabled by default)
+        self.import_confirm_button = Button(
+            content=Text(self.get_text("import")),
+            icon=Icons.UPLOAD,
+            disabled=True,
+            on_click=self._confirm_import,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+        )
+
+        # Create the dialog
+        self.import_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    self.get_text("import_students"),
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.PRIMARY_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text(
+                            self.get_text("select_file"),
+                            size=14,
+                            weight=FontWeight.BOLD,
+                            color=Constants.PRIMARY_COLOR,
+                        ),
+                        Row(
+                            controls=[
+                                self.import_file_path_text,
+                                self.import_file_picker_button,
+                            ],
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                            vertical_alignment=CrossAxisAlignment.CENTER,
+                            spacing=10,
+                        ),
+                        self.import_file_details_container,
+                        self.import_classroom_dropdown,
+                    ],
+                    spacing=15,
+                    tight=True,
+                    horizontal_alignment=CrossAxisAlignment.STRETCH,
+                ),
+                width=600,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+            ),
+            actions=[
+                Button(
+                    content=Text(self.get_text("cancel")),
+                    on_click=self._close_import_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                self.import_confirm_button,
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+        # Store for parsed data
+        self.parsed_students = []
+        self.import_file_path = None
+
+    def _create_detail_stat(
+        self, title: str, value_control: Control, icon: str, color: str
+    ) -> Control:
+        """Create a detail statistic card for import dialog"""
+        return Container(
+            content=Column(
+                controls=[
+                    Icon(icon, color=color, size=30),
+                    Text(
+                        title,
+                        size=12,
+                        color=Colors.GREY_600,
+                        text_align=TextAlign.CENTER,
+                    ),
+                    value_control,
+                ],
+                horizontal_alignment=CrossAxisAlignment.CENTER,
+                spacing=5,
+            ),
+            padding=Padding.all(10),
+            expand=1,
+            border_radius=BorderRadius.all(10),
+            bgcolor="white",
+            shadow=BoxShadow(color="black12", blur_radius=3, offset=Offset(0, 1)),
+        )
+
+    async def _pick_import_file(self, e):
+        """Open file picker to select CSV or Excel file"""
+        import os
+
+        def on_file_picked(result: list[FilePickerFile]):
+            if result:
+                file_path = result[0].path
+                self.import_file_path = file_path
+                self.import_file_path_text.value = os.path.basename(file_path)
+                self.import_file_path_text.italic = False
+                self.import_file_path_text.color = Constants.PRIMARY_COLOR
+
+                # Parse the file
+                asyncio.create_task(self._parse_import_file(file_path))
+
+                self.import_file_path_text.update()
+
+        file_picker = FilePicker()
+        # self.page.overlay.append(file_picker)
+        # self.page.update()
+
+        result = await file_picker.pick_files(
+            allowed_extensions=["csv", "xlsx", "xls"],
+            file_type=FilePickerFileType.CUSTOM,
+            dialog_title=self.get_text("select_file"),
+        )
+        on_file_picked(result)
+
+    async def _parse_import_file(self, file_path: str):
+        """Parse CSV or Excel file and extract student data"""
+        import os
+
+        try:
+            file_extension = os.path.splitext(file_path)[1].lower()
+
+            if file_extension == ".csv":
+                students = await self._parse_csv_file(file_path)
+            elif file_extension in [".xlsx", ".xls"]:
+                students = await self._parse_excel_file(file_path)
+            else:
+                self._show_error_snackbar(self.get_text("invalid_file_format"))
+                return
+
+            if students:
+                self.parsed_students = students
+
+                # Calculate statistics
+                male_count = sum(
+                    1 for s in students if s.gender.upper().startswith("M")
+                )
+                female_count = sum(
+                    1 for s in students if s.gender.upper().startswith("F")
+                )
+                total_count = len(students)
+
+                # Update UI
+                self.import_male_count_text.value = str(male_count)
+                self.import_female_count_text.value = str(female_count)
+                self.import_total_count_text.value = str(total_count)
+                self.import_file_details_container.visible = True
+                self.import_confirm_button.disabled = False
+
+                # Update classroom dropdown
+                self._populate_import_classroom_dropdown()
+
+                try:
+                    self.import_male_count_text.update()
+                    self.import_female_count_text.update()
+                    self.import_total_count_text.update()
+                    self.import_file_details_container.update()
+                    self.import_confirm_button.update()
+                    self.import_classroom_dropdown.update()
+                except:
+                    pass
+            else:
+                self._show_error_snackbar(self.get_text("file_format_error"))
+
+        except Exception as ex:
+            print(f"Error parsing file: {ex}")
+            self._show_error_snackbar(f"{self.get_text('import_error')}: {str(ex)}")
+
+    async def _parse_csv_file(self, file_path: str) -> list:
+        """Parse CSV file and return list of StudentModel objects"""
+        import csv
+
+        students = []
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+
+                for row in reader:
+                    try:
+                        student = StudentModel(
+                            id_student=0,  # Will be assigned by database
+                            first_name=row.get("first_name", "").strip(),
+                            last_name=row.get("last_name", "").strip(),
+                            surname=row.get("surname", "").strip(),
+                            gender=row.get("gender", "M").strip().upper(),
+                            date_of_birth=row.get(
+                                "date_of_birth", "01-01-2000"
+                            ).strip(),
+                            address=row.get("address", "").strip(),
+                            parent_contact=row.get("parent_contact", "").strip(),
+                        )
+                        students.append(student)
+                    except Exception as e:
+                        print(f"Error parsing row: {e}")
+                        continue
+        except Exception as e:
+            print(f"Error reading CSV file: {e}")
+            raise
+
+        return students
+
+    async def _parse_excel_file(self, file_path: str) -> list:
+        """Parse Excel file and return list of StudentModel objects"""
+        try:
+            import openpyxl
+        except ImportError:
+            self._show_error_snackbar(
+                "openpyxl library not installed. Please install it to import Excel files."
+            )
+            return []
+
+        students = []
+
+        try:
+            workbook = openpyxl.load_workbook(file_path)
+            sheet = workbook.active
+
+            # Assume first row is header
+            headers = [cell.value for cell in sheet[1]]
+
+            # Find column indices
+            first_name_idx = (
+                headers.index("first_name") if "first_name" in headers else 0
+            )
+            last_name_idx = headers.index("last_name") if "last_name" in headers else 1
+            surname_idx = headers.index("surname") if "surname" in headers else 2
+            gender_idx = headers.index("gender") if "gender" in headers else 3
+            date_of_birth_idx = (
+                headers.index("date_of_birth") if "date_of_birth" in headers else 4
+            )
+            address_idx = headers.index("address") if "address" in headers else 5
+            parent_contact_idx = (
+                headers.index("parent_contact") if "parent_contact" in headers else 6
+            )
+
+            # Read rows (skip header)
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                try:
+                    student = StudentModel(
+                        id_student=0,  # Will be assigned by database
+                        first_name=str(row[first_name_idx] or "").strip(),
+                        last_name=str(row[last_name_idx] or "").strip(),
+                        surname=str(row[surname_idx] or "").strip(),
+                        gender=str(row[gender_idx] or "M").strip().upper(),
+                        date_of_birth=str(
+                            row[date_of_birth_idx] or "01-01-2000"
+                        ).strip(),
+                        address=str(row[address_idx] or "").strip(),
+                        parent_contact=str(row[parent_contact_idx] or "").strip(),
+                    )
+                    students.append(student)
+                except Exception as e:
+                    print(f"Error parsing row: {e}")
+                    continue
+
+            workbook.close()
+        except Exception as e:
+            print(f"Error reading Excel file: {e}")
+            raise
+
+        return students
+
+    def _populate_import_classroom_dropdown(self):
+        """Populate classroom dropdown for import"""
+        if self.classrooms_data:
+            options = [
+                DropdownOption(key=str(c.id_classroom), text=c.name)
+                for c in self.classrooms_data
+            ]
+            self.import_classroom_dropdown.options = options
+            if options:
+                self.import_classroom_dropdown.value = options[0].key
+
+    def _open_import_dialog(self, e):
+        """Open the import dialog"""
+        # Reset dialog state
+        self.import_file_path = None
+        self.parsed_students = []
+        self.import_file_path_text.value = self.get_text("no_file_selected")
+        self.import_file_path_text.italic = True
+        self.import_file_path_text.color = Colors.GREY_600
+        self.import_file_details_container.visible = False
+        self.import_confirm_button.disabled = True
+
+        # Populate classroom dropdown
+        self._populate_import_classroom_dropdown()
+
+        # Show dialog
+        self.page.show_dialog(self.import_dialog)
+        self.page.update()
+
+    def _close_import_dialog(self, e=None):
+        """Close the import dialog"""
+        self.import_dialog.open = False
+        self.page.update()
+
+    async def _confirm_import(self, e):
+        """Confirm and execute import"""
+        if not self.parsed_students:
+            self._show_error_snackbar(self.get_text("no_file_selected"))
+            return
+
+        if not self.import_classroom_dropdown.value:
+            self._show_error_snackbar(self.get_text("classroom_required"))
+            return
+
+        try:
+            classroom_id = int(self.import_classroom_dropdown.value)
+
+            # Disable button and show processing
+            self.import_confirm_button.disabled = True
+            self.import_confirm_button.content = Text(self.get_text("processing_file"))
+            self.import_confirm_button.update()
+
+            # Call service to import
+            success, imported_count = await self.services.import_students(
+                self.parsed_students, classroom_id
+            )
+
+            if success:
+                self._close_import_dialog()
+                self._show_success_snackbar(
+                    f"{imported_count} {self.get_text('students_imported')}"
+                )
+                # Reload data
+                await self.load_data()
+            else:
+                self._show_error_snackbar(self.get_text("import_error"))
+                self.import_confirm_button.disabled = False
+                self.import_confirm_button.content = Text(self.get_text("import"))
+                self.import_confirm_button.update()
+
+        except Exception as ex:
+            print(f"Error during import: {ex}")
+            self._show_error_snackbar(f"{self.get_text('import_error')}: {str(ex)}")
+            self.import_confirm_button.disabled = False
+            self.import_confirm_button.content = Text(self.get_text("import"))
+            self.import_confirm_button.update()
+
+    def _show_error_snackbar(self, message: str):
+        """Show error snackbar"""
+        try:
+            self.page.show_snack_bar(
+                SnackBar(
+                    content=Text(message),
+                    bgcolor=Colors.RED,
+                )
+            )
+        except:
+            print(f"Error: {message}")
+
+    def _show_success_snackbar(self, message: str):
+        """Show success snackbar"""
+        try:
+            self.page.show_snack_bar(
+                SnackBar(
+                    content=Text(message),
+                    bgcolor=Colors.GREEN,
+                )
+            )
+        except:
+            print(f"Success: {message}")
+
     def _apply_filters(self):
         """Apply search and filters to students data"""
         if not self.students_data:
@@ -1203,7 +1671,7 @@ class StudentsScreen:
                 padding=Padding(10, 20, 10, 20),
                 color="white",
             ),
-            # on_click=self._open_load_file_form,
+            on_click=self._open_import_dialog,
             content=self.get_text("load_from_file"),
         )
 

@@ -26,3 +26,10 @@ class StudentsServices:
         """Update a student"""
         # await asyncio.sleep(1)  # Simulate network delay
         return await self.app_state.api_client.update_student(student)
+
+    async def import_students(self, students_list, classroom_id):
+        """Import multiple students"""
+        # await asyncio.sleep(1)  # Simulate network delay
+        return await self.app_state.api_client.import_students(
+            students_list, classroom_id
+        )
