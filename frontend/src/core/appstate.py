@@ -1,6 +1,7 @@
 """État global de l'application"""
 
 import asyncio
+import pathlib
 
 import flet as ft
 from data.api.fake_client import FakeApiClient
@@ -58,7 +59,12 @@ class AppState:
         try:
             import json
 
-            with open(f"langs/{language}.json", encoding="utf-8") as f:
+            # get the path to the current file
+            current_dir = pathlib.Path(__file__).parent
+            # construct the full path to the language file
+            lang_file_path = current_dir / ".." / "langs" / f"{language}.json"
+
+            with open(lang_file_path.resolve(), encoding="utf-8") as f:
                 translations = f.read()
                 self.translations = json.loads(translations)
                 return json.loads(translations)
