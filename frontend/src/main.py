@@ -13,6 +13,7 @@ from screens import (
     PaymentScreen,
     AdminScreen,
     CheckoutScreen,
+    ReportsScreen,
 )
 from models import UserModel
 
@@ -57,6 +58,11 @@ class MainAppp:
         )
 
         self.admin_screen = AdminScreen(app_state=self.app_state, page=self.page)
+
+        self.reports_screen = ReportsScreen(
+            app_state=self.app_state,
+            page=self.page,
+        )
 
         if not is_language_change:
             # self._setup_screen(self.login_screen.build_page())
@@ -359,9 +365,8 @@ class MainAppp:
             asyncio.create_task(self.checkout_screen.on_mount())
 
         elif selected_data == "reports":
-            self.content_area.content = Container(
-                content=Text("Gestion des Rapports en cours de développement")
-            )
+            self.content_area.content = self.reports_screen.build()
+            # asyncio.create_task(self.reports_screen.on_mount())
 
         elif selected_data == "admin":
             self.content_area.content = self.admin_screen.build()

@@ -5,6 +5,7 @@ from .students.students_screen import StudentsScreen
 from .payment.payment_screen import PaymentScreen
 from .admin.admin_screen import AdminScreen
 from .checkout.checkout_screen import CheckoutScreen
+from .reports.reports_screen import ReportsScreen
 
 __all__ = [
     "LoginScreen",
@@ -14,4 +15,5 @@ __all__ = [
     "PaymentScreen",
     "AdminScreen",
     "CheckoutScreen",
+    "ReportsScreen",
 ]
