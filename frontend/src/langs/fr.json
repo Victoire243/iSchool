@@ -307,5 +307,6 @@
     "description_quick_entry":"Description de l'entrée rapide",
     "description_quick_expense":"Description de la dépense rapide",
     "search_staff":"Rechercher le personnel",
-    "enter_staff_name":"Entrez le nom du personnel"
+    "enter_staff_name":"Entrez le nom du personnel",
+    "load_from_file":"Charger depuis un fichier"
 }

@@ -285,6 +285,13 @@ class StudentsScreen:
             **self.get_box_style(),
         )
 
+    def _build_load_from_file_dialog(self):
+        self.classroom_load_file_from = Dropdown(
+            label=self.get_text("classroom"),
+            border_radius=BorderRadius.all(5),
+            options=[],
+        )
+
     def _clear_form(self):
         self.full_name_field_form.value = ""
         self.birth_date_field_form.value = "01-01-2000"
@@ -1187,6 +1194,19 @@ class StudentsScreen:
             content=self.get_text("add_student"),
         )
 
+        self.load_file_button = Button(
+            icon=Icons.ADD,
+            tooltip=self.get_text("load_from_file"),
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Colors.ORANGE,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            # on_click=self._open_load_file_form,
+            content=self.get_text("load_from_file"),
+        )
+
         self.main_content = Container(
             padding=Padding.symmetric(horizontal=20, vertical=10),
             expand=True,
@@ -1211,6 +1231,7 @@ class StudentsScreen:
                             Row(
                                 controls=[
                                     self.add_button,
+                                    self.load_file_button,
                                     IconButton(
                                         icon=Icons.REFRESH,
                                         icon_color=Constants.PRIMARY_COLOR,

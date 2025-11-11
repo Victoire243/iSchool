@@ -307,5 +307,6 @@
     "description_quick_entry":"Quick entry description",
     "description_quick_expense":"Quick expense description",
     "search_staff":"Search Staff",
-    "enter_staff_name":"Enter staff name"
+    "enter_staff_name":"Enter staff name",
+    "load_from_file":"Load from file"
 }
