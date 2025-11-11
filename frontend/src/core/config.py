@@ -8,8 +8,8 @@ class Config:
     API_BASE_URL = "http://127.0.0.1:5000/api"
 
     # UI Configuration
-    APP_TITLE = "Complexe Scolaire Saint KADI - Système de Gestion"
-    SCHOOL_NAME = "Complexe Scolaire Saint KADI"
+    APP_TITLE = "iSchool"
+    SCHOOL_NAME = "iSchool"
 
     # Window Configuration
     WINDOW_WIDTH = 1200
