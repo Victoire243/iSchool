@@ -366,7 +366,7 @@ class MainAppp:
 
         elif selected_data == "reports":
             self.content_area.content = self.reports_screen.build()
-            # asyncio.create_task(self.reports_screen.on_mount())
+            asyncio.create_task(self.reports_screen.on_mount())
 
         elif selected_data == "admin":
             self.content_area.content = self.admin_screen.build()
