@@ -33,3 +33,6 @@ class StudentsServices:
         return await self.app_state.api_client.import_students(
             students_list, classroom_id
         )
+
+    async def create_student(self, student):
+        return await self.app_state.api_client.create_student(student)

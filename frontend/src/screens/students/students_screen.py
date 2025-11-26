@@ -1,5 +1,6 @@
 from turtle import st
-from flet import *  # type: ignore
+from flet import *
+from matplotlib.pyplot import cla  # type: ignore
 from core import AppState, Constants
 from utils import Utils
 import asyncio
@@ -188,8 +189,8 @@ class StudentsScreen:
             label=self.get_text("gender"),
             border_radius=BorderRadius.all(5),
             options=[
-                DropdownOption(key="male", text=self.get_text("male")),
-                DropdownOption(key="female", text=self.get_text("female")),
+                DropdownOption(key="M", text=self.get_text("male")),
+                DropdownOption(key="F", text=self.get_text("female")),
             ],
             expand=1,
             helper_text=self.get_text("select_gender"),
@@ -228,6 +229,7 @@ class StudentsScreen:
                 padding=Padding(10, 20, 10, 20),
                 color="white",
             ),
+            on_click=self._submit_add_form,
         )
 
         self.button_cancel_form = Button(
@@ -1483,6 +1485,57 @@ class StudentsScreen:
                     bgcolor=Colors.RED,
                 )
             )
+
+    async def _submit_add_form(self, e):
+        def extraite_names():
+            try:
+                names = self.full_name_field_form.value.strip().split(" ")
+                if len(names) >= 3:
+                    return names[0], names[1], " ".join(names[2:])
+                elif len(names) == 2:
+                    return names[0], names[1], ""
+                elif len(names) == 1:
+                    return names[0], "", ""
+                else:
+                    return "", "", ""
+            except:
+                return "", "", ""
+
+        if (
+            not self.full_name_field_form.value.strip()
+            or not self.birth_date_field_form.value.strip()
+            or not self.classroom_form.value
+            or not self.gender_form.value
+        ):
+            return
+        first_name, last_name, surname = extraite_names()
+        birth_date = self.birth_date_field_form.value.strip()
+        classroom_id = int(self.classroom_form.value)
+        gender = self.gender_form.value
+        adress = self.address_field_form.value.strip()
+        parent_contact = self.parent_contact_field_form.value.strip()
+
+        print(
+            f"Adding new student: {first_name} {last_name} {surname}, DOB: {birth_date}, Classroom ID: {classroom_id}, Gender: {gender}, Address: {adress}, Parent Contact: {parent_contact}"
+        )
+        response = await self.services.create_student(
+            StudentModel.from_dict(
+                {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "surname": surname,
+                    "gender": gender,
+                    "date_of_birth": birth_date,
+                    "address": adress,
+                    "parent_contact": parent_contact,
+                    "is_deleted": False,
+                }
+            )
+        )
+        if response:
+            print("Student created successfully")
+        else:
+            print("Error while creating student")
 
     def _create_table_header(self):
         """Create table header row"""

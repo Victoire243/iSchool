@@ -39,3 +39,17 @@ class StudentModel:
             "parent_contact": self.parent_contact,
             "is_deleted": self.is_deleted,
         }
+
+    @classmethod
+    def from_dict(cls, student: dict) -> "StudentModel":
+        return cls(
+            id_student=student.get("id_student", 0),
+            first_name=student.get("first_name", ""),
+            last_name=student.get("last_name", ""),
+            surname=student.get("surname", ""),
+            gender=student.get("gender", ""),
+            date_of_birth=student.get("date_of_birth", ""),
+            address=student.get("address", ""),
+            parent_contact=student.get("parent_contact", ""),
+            is_deleted=student.get("is_deleted", False),
+        )

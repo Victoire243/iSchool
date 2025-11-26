@@ -408,6 +408,8 @@ def _recreate_schema(cursor: sqlite3.Cursor) -> None:
         "DROP TABLE IF EXISTS school_years;",
         "DROP TABLE IF EXISTS users;",
         "DROP TABLE IF EXISTS roles;",
+        "DROP TABLE IF EXISTS settings;",
+        "DROP TABLE IF EXISTS audit_logs;",
         "CREATE TABLE roles (id_role INTEGER PRIMARY KEY, role_name TEXT NOT NULL, is_deleted INTEGER DEFAULT 0);",
         "CREATE TABLE users (id_user INTEGER PRIMARY KEY, username TEXT NOT NULL, email TEXT NOT NULL, password TEXT NOT NULL, role_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(role_id) REFERENCES roles(id_role));",
         "CREATE TABLE school_years (id_school_year INTEGER PRIMARY KEY, name TEXT NOT NULL, start_date TEXT NOT NULL, end_date TEXT NOT NULL, is_active INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0);",
