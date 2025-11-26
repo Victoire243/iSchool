@@ -8,15 +8,17 @@ class SchoolYearModel:
         start_date: str,
         end_date: str,
         is_active: bool,
+        is_deleted: bool = False,
     ) -> None:
         self.id_school_year = id_school_year  # Primary key
         self.name = name
         self.start_date = start_date
         self.end_date = end_date
         self.is_active = is_active
+        self.is_deleted = is_deleted
 
     def __repr__(self) -> str:
-        return f"SchoolYearModel(id_school_year={self.id_school_year}, name='{self.name}', start_date='{self.start_date}', end_date='{self.end_date}', is_active={self.is_active})"
+        return f"SchoolYearModel(id_school_year={self.id_school_year}, name='{self.name}', start_date='{self.start_date}', end_date='{self.end_date}', is_active={self.is_active}, is_deleted={self.is_deleted})"
 
     def to_dict(self) -> dict:
         """Convert the SchoolYearModel instance to a dictionary."""
@@ -26,4 +28,5 @@ class SchoolYearModel:
             "start_date": self.start_date,
             "end_date": self.end_date,
             "is_active": self.is_active,
+            "is_deleted": self.is_deleted,
         }

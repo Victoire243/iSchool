@@ -11,6 +11,7 @@ class StudentModel:
         date_of_birth: str,
         address: str,
         parent_contact: str,
+        is_deleted: bool = False,
     ) -> None:
         self.id_student = id_student
         self.first_name = first_name
@@ -20,9 +21,10 @@ class StudentModel:
         self.date_of_birth = date_of_birth
         self.address = address
         self.parent_contact = parent_contact
+        self.is_deleted = is_deleted
 
     def __repr__(self) -> str:
-        return f"StudentModel(id_student={self.id_student}, first_name='{self.first_name}', last_name='{self.last_name}', surname='{self.surname}', gender='{self.gender}', date_of_birth='{self.date_of_birth}', address='{self.address}', parent_contact='{self.parent_contact}')"
+        return f"StudentModel(id_student={self.id_student}, first_name='{self.first_name}', last_name='{self.last_name}', surname='{self.surname}', gender='{self.gender}', date_of_birth='{self.date_of_birth}', address='{self.address}', parent_contact='{self.parent_contact}', is_deleted={self.is_deleted})"
 
     def to_dict(self) -> dict:
         """Convert the StudentModel instance to a dictionary."""
@@ -35,4 +37,5 @@ class StudentModel:
             "date_of_birth": self.date_of_birth,
             "address": self.address,
             "parent_contact": self.parent_contact,
+            "is_deleted": self.is_deleted,
         }

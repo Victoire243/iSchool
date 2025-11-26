@@ -9,6 +9,7 @@ class StaffModel:
         position: str,
         hire_date: str,
         salary_base: float,
+        is_deleted: bool = False,
     ) -> None:
         self.id_staff = id_staff  # Primary key
         self.first_name = first_name  # Staff member's first name
@@ -16,9 +17,10 @@ class StaffModel:
         self.position = position  # Position (e.g., "Enseignant", "Comptable")
         self.hire_date = hire_date  # Date of hire
         self.salary_base = salary_base  # Base salary
+        self.is_deleted = is_deleted
 
     def __repr__(self) -> str:
-        return f"StaffModel(id_staff={self.id_staff}, first_name='{self.first_name}', last_name='{self.last_name}', position='{self.position}', hire_date='{self.hire_date}', salary_base={self.salary_base})"
+        return f"StaffModel(id_staff={self.id_staff}, first_name='{self.first_name}', last_name='{self.last_name}', position='{self.position}', hire_date='{self.hire_date}', salary_base={self.salary_base}, is_deleted={self.is_deleted})"
 
     def to_dict(self) -> dict:
         """Convert the StaffModel instance to a dictionary."""
@@ -29,6 +31,7 @@ class StaffModel:
             "position": self.position,
             "hire_date": self.hire_date,
             "salary_base": self.salary_base,
+            "is_deleted": self.is_deleted,
         }
 
     @classmethod

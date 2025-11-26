@@ -10,6 +10,7 @@ class PaymentModel:
         amount: float,
         payment_date: str,
         user_id: int,
+        is_deleted: bool = False,
     ) -> None:
         self.id_payment = id_payment  # Primary key
         self.student_id = student_id  # Foreign key to StudentModel
@@ -18,9 +19,10 @@ class PaymentModel:
         self.amount = amount  # Payment amount
         self.payment_date = payment_date  # Date of payment
         self.user_id = user_id  # Foreign key to UserModel
+        self.is_deleted = is_deleted
 
     def __repr__(self) -> str:
-        return f"PaymentModel(id_payment={self.id_payment}, student_id={self.student_id}, school_year_id={self.school_year_id}, payment_type_id={self.payment_type_id}, amount={self.amount}, payment_date='{self.payment_date}', user_id={self.user_id})"
+        return f"PaymentModel(id_payment={self.id_payment}, student_id={self.student_id}, school_year_id={self.school_year_id}, payment_type_id={self.payment_type_id}, amount={self.amount}, payment_date='{self.payment_date}', user_id={self.user_id}, is_deleted={self.is_deleted})"
 
     def to_dict(self) -> dict:
         """Convert the PaymentModel instance to a dictionary."""
@@ -32,6 +34,7 @@ class PaymentModel:
             "amount": self.amount,
             "payment_date": self.payment_date,
             "user_id": self.user_id,
+            "is_deleted": self.is_deleted,
         }
 
     @classmethod
