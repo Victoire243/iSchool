@@ -602,30 +602,30 @@ class PaymentScreen:
         """Submit the payment form"""
         # Validate form
         if not self.selected_student_id:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_select_student")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
+            # self.page.snack_bar = SnackBar(
+            #     Text(self.get_text("please_select_student")),
+            #     bgcolor=Constants.CANCEL_COLOR,
+            # )
+            # self.page.snack_bar.open = True
+            # self.page.update()
             return
 
         if not self.payment_type_dropdown.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_select_payment_type")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
+            # self.page.snack_bar = SnackBar(
+            #     Text(self.get_text("please_select_payment_type")),
+            #     bgcolor=Constants.CANCEL_COLOR,
+            # )
+            # self.page.snack_bar.open = True
+            # self.page.update()
             return
 
         if not self.amount_field_form.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_amount")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
+            # self.page.snack_bar = SnackBar(
+            #     Text(self.get_text("please_enter_amount")),
+            #     bgcolor=Constants.CANCEL_COLOR,
+            # )
+            # self.page.snack_bar.open = True
+            # self.page.update()
             return
 
         # Validate period if required
