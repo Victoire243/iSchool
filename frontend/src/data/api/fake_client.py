@@ -17,6 +17,7 @@ from models.enrollment_model import EnrollmentModel
 from models.expense_model import ExpenseModel
 from models.payment_model import PaymentModel
 from models.payment_type_model import PaymentTypeModel
+from models.fee_model import FeeModel
 from models.role_model import RoleModel
 from models.school_year_model import SchoolYearModel
 from models.staff_model import StaffModel
@@ -951,3 +952,91 @@ class FakeApiClient:
             f"SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT {limit}"
         )
         return [AuditLogModel(**dict(row)) for row in rows]
+
+    # ------------------------------------------------------------------
+    # Fees Management
+    async def list_fees(self, deletion_status: str = "active") -> List[FeeModel]:
+        """List all fees"""
+        filter_clause = self._get_deletion_filter(deletion_status)
+        rows = await self._fetch_all(
+            f"SELECT * FROM fees WHERE {filter_clause} ORDER BY name"
+        )
+        return [FeeModel(**dict(row)) for row in rows]
+
+    async def get_fee(
+        self, fee_id: int, deletion_status: str = "active"
+    ) -> Optional[FeeModel]:
+        """Get a fee by ID"""
+        filter_clause = self._get_deletion_filter(deletion_status)
+        row = await self._fetch_one(
+            f"SELECT * FROM fees WHERE id_fee = ? AND {filter_clause}", (fee_id,)
+        )
+        return FeeModel(**dict(row)) if row else None
+
+    async def create_fee(
+        self,
+        name: str,
+        description: str,
+        amount: float,
+        periodicity: str,
+        is_active: bool = True,
+    ) -> FeeModel:
+        """Create a new fee"""
+        connection = await self._ensure_connection()
+        async with connection.execute(
+            """
+            INSERT INTO fees (name, description, amount, periodicity, is_active)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (name, description, amount, periodicity, int(is_active)),
+        ) as cursor:
+            await connection.commit()
+            new_id = cursor.lastrowid
+        return FeeModel(
+            id_fee=new_id,
+            name=name,
+            description=description,
+            amount=amount,
+            periodicity=periodicity,
+            is_active=is_active,
+            is_deleted=False,
+        )
+
+    async def update_fee(
+        self,
+        fee_id: int,
+        name: str,
+        description: str,
+        amount: float,
+        periodicity: str,
+        is_active: bool,
+    ) -> bool:
+        """Update a fee"""
+        connection = await self._ensure_connection()
+        try:
+            await connection.execute(
+                """
+                UPDATE fees SET name = ?, description = ?, amount = ?, periodicity = ?, is_active = ?
+                WHERE id_fee = ?
+                """,
+                (name, description, amount, periodicity, int(is_active), fee_id),
+            )
+            await connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating fee: {e}")
+            return False
+
+    async def delete_fee(self, fee_id: int) -> bool:
+        """Soft delete a fee"""
+        connection = await self._ensure_connection()
+        try:
+            await connection.execute(
+                "UPDATE fees SET is_deleted = 1 WHERE id_fee = ?",
+                (fee_id,),
+            )
+            await connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting fee: {e}")
+            return False

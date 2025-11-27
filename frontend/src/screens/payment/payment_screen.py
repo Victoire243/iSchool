@@ -7,6 +7,7 @@ from models import (
     EnrollmentModel,
     PaymentModel,
     PaymentTypeModel,
+    FeeModel,
 )
 from .payment_services import PaymentServices
 import asyncio
@@ -495,22 +496,25 @@ class PaymentScreen:
         self.payment_date_field.value = datetime.now().strftime("%Y-%m-%d")
 
     def _populate_payment_types(self):
-        """Populate payment types dropdown"""
+        """Populate payment types dropdown with fees"""
         if self.payment_types_data:
             self.payment_type_dropdown.options = [
-                DropdownOption(key=str(pt.id_payment_type), text=pt.name)
-                for pt in self.payment_types_data
+                DropdownOption(
+                    key=str(fee.id_fee),
+                    text=f"{fee.name} ({fee.amount:.2f} $ - {fee.get_periodicity_display()})",
+                )
+                for fee in self.payment_types_data
             ]
             if hasattr(self.payment_type_dropdown, "update"):
                 self.payment_type_dropdown.update()
 
     def _on_payment_type_select(self, e):
-        """Handle payment type selection and auto-fill amount"""
+        """Handle payment type selection and auto-fill amount from fee"""
         if e.control.value:
-            payment_type_id = int(e.control.value)
-            for pt in self.payment_types_data:
-                if pt.id_payment_type == payment_type_id:
-                    self.amount_field_form.value = str(int(pt.amount_defined))
+            fee_id = int(e.control.value)
+            for fee in self.payment_types_data:
+                if fee.id_fee == fee_id:
+                    self.amount_field_form.value = str(int(fee.amount))
                     if hasattr(self.amount_field_form, "update"):
                         self.amount_field_form.update()
                     break
@@ -754,8 +758,8 @@ class PaymentScreen:
 
         # Apply payment type filter
         if self.selected_payment_type_filter != "all":
-            payment_type_id = int(self.selected_payment_type_filter)
-            filtered = [p for p in filtered if p.payment_type_id == payment_type_id]
+            fee_id = int(self.selected_payment_type_filter)
+            filtered = [p for p in filtered if p.payment_type_id == fee_id]
 
         # Apply classroom filter
         if self.selected_classroom_filter != "all":
@@ -771,7 +775,7 @@ class PaymentScreen:
         self.filtered_payments = filtered
 
     def _update_payment_type_filter_options(self):
-        """Update payment type filter dropdown options"""
+        """Update payment type filter dropdown options with fees"""
         if not hasattr(self, "payment_type_filter_dropdown"):
             return
 
@@ -779,8 +783,8 @@ class PaymentScreen:
             DropdownOption(key="all", text=self.get_text("all_types")),
         ]
 
-        for pt in self.payment_types_data:
-            options.append(DropdownOption(key=str(pt.id_payment_type), text=pt.name))
+        for fee in self.payment_types_data:
+            options.append(DropdownOption(key=str(fee.id_fee), text=fee.name))
 
         self.payment_type_filter_dropdown.options = options
 
@@ -865,10 +869,10 @@ class PaymentScreen:
         return "N/A"
 
     def _get_payment_type_name(self, payment_type_id: int) -> str:
-        """Get payment type name by ID"""
-        for pt in self.payment_types_data:
-            if pt.id_payment_type == payment_type_id:
-                return pt.name
+        """Get payment type name by ID (from fees)"""
+        for fee in self.payment_types_data:
+            if fee.id_fee == payment_type_id:
+                return fee.name
         return "N/A"
 
     def _get_classroom_name(self, student_id: int) -> str:

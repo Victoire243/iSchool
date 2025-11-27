@@ -7,6 +7,7 @@ from .enrollment_model import EnrollmentModel
 from .expense_model import ExpenseModel
 from .payment_model import PaymentModel
 from .payment_type_model import PaymentTypeModel
+from .fee_model import FeeModel
 from .role_model import RoleModel
 from .school_year_model import SchoolYearModel
 from .staff_model import StaffModel
@@ -27,4 +28,5 @@ __all__ = [
     "StaffPaymentModel",
     "StudentModel",
     "PaymentTypeModel",
+    "FeeModel",
 ]
