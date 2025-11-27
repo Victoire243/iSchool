@@ -11,6 +11,7 @@ class PaymentModel:
         payment_date: str,
         user_id: int,
         is_deleted: bool = False,
+        period: str = None,
     ) -> None:
         self.id_payment = id_payment  # Primary key
         self.student_id = student_id  # Foreign key to StudentModel
@@ -20,6 +21,7 @@ class PaymentModel:
         self.payment_date = payment_date  # Date of payment
         self.user_id = user_id  # Foreign key to UserModel
         self.is_deleted = is_deleted
+        self.period = period  # Period (e.g., 'January', 'Q1', 'Semester 1')
 
     def __repr__(self) -> str:
         return f"PaymentModel(id_payment={self.id_payment}, student_id={self.student_id}, school_year_id={self.school_year_id}, payment_type_id={self.payment_type_id}, amount={self.amount}, payment_date='{self.payment_date}', user_id={self.user_id}, is_deleted={self.is_deleted})"
@@ -35,6 +37,7 @@ class PaymentModel:
             "payment_date": self.payment_date,
             "user_id": self.user_id,
             "is_deleted": self.is_deleted,
+            "period": self.period,
         }
 
     @classmethod
@@ -48,4 +51,5 @@ class PaymentModel:
             amount=data["amount"],
             payment_date=data["payment_date"],
             user_id=data["user_id"],
+            period=data.get("period"),
         )

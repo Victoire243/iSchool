@@ -458,7 +458,7 @@ def _recreate_schema(cursor: sqlite3.Cursor) -> None:
         "CREATE TABLE enrollments (id_enrollment INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, classroom_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, status TEXT NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(student_id) REFERENCES students(id_student), FOREIGN KEY(classroom_id) REFERENCES classrooms(id_classroom), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year));",
         "CREATE TABLE fees (id_fee INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, amount REAL NOT NULL, periodicity TEXT NOT NULL, is_active INTEGER DEFAULT 1, is_deleted INTEGER DEFAULT 0);",
         "CREATE TABLE payment_types (id_payment_type INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, amount_defined REAL NOT NULL, is_deleted INTEGER DEFAULT 0);",
-        "CREATE TABLE payments (id_payment INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, payment_type_id INTEGER NOT NULL, amount REAL NOT NULL, payment_date TEXT NOT NULL, user_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(student_id) REFERENCES students(id_student), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(payment_type_id) REFERENCES payment_types(id_payment_type), FOREIGN KEY(user_id) REFERENCES users(id_user));",
+        "CREATE TABLE payments (id_payment INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, payment_type_id INTEGER NOT NULL, amount REAL NOT NULL, payment_date TEXT NOT NULL, user_id INTEGER NOT NULL, period TEXT, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(student_id) REFERENCES students(id_student), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(payment_type_id) REFERENCES payment_types(id_payment_type), FOREIGN KEY(user_id) REFERENCES users(id_user));",
         "CREATE TABLE expenses (id_expense INTEGER PRIMARY KEY, school_year_id INTEGER NOT NULL, expense_date TEXT NOT NULL, description TEXT NOT NULL, amount REAL NOT NULL, user_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
         "CREATE TABLE staff (id_staff INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, position TEXT NOT NULL, hire_date TEXT NOT NULL, salary_base REAL NOT NULL, is_deleted INTEGER DEFAULT 0);",
         "CREATE TABLE staff_payments (id_staff_payment INTEGER PRIMARY KEY, staff_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, amount REAL NOT NULL, payment_date TEXT NOT NULL, user_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(staff_id) REFERENCES staff(id_staff), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
@@ -521,6 +521,7 @@ def _insert_dataset(cursor: sqlite3.Cursor, dataset: FakeDataset) -> None:
             "amount",
             "payment_date",
             "user_id",
+            "period",
         ),
         "expenses": (
             "id_expense",
