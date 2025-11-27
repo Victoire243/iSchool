@@ -88,7 +88,7 @@ class CheckoutServices:
 
             entry = await self.app_state.api_client.create_cash_register_entry(
                 school_year_id=school_year.id_school_year,
-                date=datetime.now().strftime("%Y-%m-%d"),
+                date=datetime.now().strftime("%d-%m-%Y"),
                 type=entry_type,
                 description=description,
                 amount=amount,
@@ -108,7 +108,7 @@ class CheckoutServices:
 
             expense = await self.app_state.api_client.create_expense(
                 school_year_id=school_year.id_school_year,
-                expense_date=datetime.now().strftime("%Y-%m-%d"),
+                expense_date=datetime.now().strftime("%d-%m-%Y"),
                 description=description,
                 amount=amount,
                 user_id=self.app_state.current_user.id_user,
@@ -129,7 +129,7 @@ class CheckoutServices:
                 staff_id=staff_id,
                 school_year_id=school_year.id_school_year,
                 amount=amount,
-                payment_date=datetime.now().strftime("%Y-%m-%d"),
+                payment_date=datetime.now().strftime("%d-%m-%Y"),
                 user_id=self.app_state.current_user.id_user,
             )
             return (True, payment)

@@ -18,6 +18,7 @@ from models.enrollment_model import EnrollmentModel
 from models.expense_model import ExpenseModel
 from models.payment_model import PaymentModel
 from models.payment_type_model import PaymentTypeModel
+from models.fee_model import FeeModel
 from models.role_model import RoleModel
 from models.school_year_model import SchoolYearModel
 from models.staff_model import StaffModel
@@ -37,6 +38,7 @@ class FakeDataset:
     classrooms: List[dict]
     students: List[dict]
     enrollments: List[dict]
+    fees: List[dict]
     payment_types: List[dict]
     payments: List[dict]
     expenses: List[dict]
@@ -63,6 +65,7 @@ class FakeDataFactory:
         classrooms = self._build_classrooms()
         students = self._build_students()
         enrollments = self._build_enrollments(students, classrooms, school_years)
+        fees = self._build_fees()
         payment_types = self._build_payment_types()
         payments = self._build_payments(students, school_years, payment_types, users)
         expenses = self._build_expenses(school_years, users)
@@ -77,6 +80,7 @@ class FakeDataFactory:
             classrooms=[classroom.to_dict() for classroom in classrooms],
             students=[student.to_dict() for student in students],
             enrollments=[enrollment.to_dict() for enrollment in enrollments],
+            fees=[fee.to_dict() for fee in fees],
             payment_types=[_sanitize_payment_type(pt) for pt in payment_types],
             payments=[payment.to_dict() for payment in payments],
             expenses=[expense.to_dict() for expense in expenses],
@@ -197,6 +201,41 @@ class FakeDataFactory:
                 )
             )
         return enrollments
+
+    def _build_fees(self) -> List[FeeModel]:
+        """Build fee types with different periodicities"""
+        fee_definitions = [
+            ("Minerval", "Frais de scolarité mensuels", 250.0, "monthly"),
+            ("Frais de laboratoire", "Utilisation du laboratoire", 150.0, "quarterly"),
+            (
+                "Frais de bibliothèque",
+                "Abonnement annuel à la bibliothèque",
+                50.0,
+                "annual",
+            ),
+            ("Assurance scolaire", "Assurance pour l'année scolaire", 80.0, "annual"),
+            ("Uniforme", "Uniforme scolaire", 120.0, "one_time"),
+            ("Transport", "Frais de transport mensuel", 60.0, "monthly"),
+            ("Cantine", "Forfait cantine mensuel", 45.0, "monthly"),
+            ("Examen final", "Frais d'inscription aux examens", 100.0, "semester"),
+            ("Activités extrascolaires", "Club et activités", 75.0, "quarterly"),
+        ]
+        fees: List[FeeModel] = []
+        for identifier, (name, description, amount, periodicity) in enumerate(
+            fee_definitions, start=1
+        ):
+            fees.append(
+                FeeModel(
+                    id_fee=identifier,
+                    name=name,
+                    description=description,
+                    amount=amount,
+                    periodicity=periodicity,
+                    is_active=True,
+                    is_deleted=False,
+                )
+            )
+        return fees
 
     def _build_payment_types(self) -> List[PaymentTypeModel]:
         payment_definitions = [
@@ -402,24 +441,30 @@ def _recreate_schema(cursor: sqlite3.Cursor) -> None:
         "DROP TABLE IF EXISTS expenses;",
         "DROP TABLE IF EXISTS payments;",
         "DROP TABLE IF EXISTS payment_types;",
+        "DROP TABLE IF EXISTS fees;",
         "DROP TABLE IF EXISTS enrollments;",
         "DROP TABLE IF EXISTS students;",
         "DROP TABLE IF EXISTS classrooms;",
         "DROP TABLE IF EXISTS school_years;",
         "DROP TABLE IF EXISTS users;",
         "DROP TABLE IF EXISTS roles;",
-        "CREATE TABLE roles (id_role INTEGER PRIMARY KEY, role_name TEXT NOT NULL);",
-        "CREATE TABLE users (id_user INTEGER PRIMARY KEY, username TEXT NOT NULL, email TEXT NOT NULL, password TEXT NOT NULL, role_id INTEGER NOT NULL, FOREIGN KEY(role_id) REFERENCES roles(id_role));",
-        "CREATE TABLE school_years (id_school_year INTEGER PRIMARY KEY, name TEXT NOT NULL, start_date TEXT NOT NULL, end_date TEXT NOT NULL, is_active INTEGER NOT NULL);",
-        "CREATE TABLE classrooms (id_classroom INTEGER PRIMARY KEY, name TEXT NOT NULL, level TEXT NOT NULL);",
-        "CREATE TABLE students (id_student INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, surname TEXT NOT NULL, gender TEXT NOT NULL, date_of_birth TEXT NOT NULL, address TEXT NOT NULL, parent_contact TEXT NOT NULL);",
-        "CREATE TABLE enrollments (id_enrollment INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, classroom_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, status TEXT NOT NULL, FOREIGN KEY(student_id) REFERENCES students(id_student), FOREIGN KEY(classroom_id) REFERENCES classrooms(id_classroom), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year));",
-        "CREATE TABLE payment_types (id_payment_type INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, amount_defined REAL NOT NULL);",
-        "CREATE TABLE payments (id_payment INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, payment_type_id INTEGER NOT NULL, amount REAL NOT NULL, payment_date TEXT NOT NULL, user_id INTEGER NOT NULL, FOREIGN KEY(student_id) REFERENCES students(id_student), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(payment_type_id) REFERENCES payment_types(id_payment_type), FOREIGN KEY(user_id) REFERENCES users(id_user));",
-        "CREATE TABLE expenses (id_expense INTEGER PRIMARY KEY, school_year_id INTEGER NOT NULL, expense_date TEXT NOT NULL, description TEXT NOT NULL, amount REAL NOT NULL, user_id INTEGER NOT NULL, FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
-        "CREATE TABLE staff (id_staff INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, position TEXT NOT NULL, hire_date TEXT NOT NULL, salary_base REAL NOT NULL);",
-        "CREATE TABLE staff_payments (id_staff_payment INTEGER PRIMARY KEY, staff_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, amount REAL NOT NULL, payment_date TEXT NOT NULL, user_id INTEGER NOT NULL, FOREIGN KEY(staff_id) REFERENCES staff(id_staff), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
-        "CREATE TABLE cash_register (id_cash INTEGER PRIMARY KEY, school_year_id INTEGER NOT NULL, date TEXT NOT NULL, type TEXT NOT NULL, description TEXT NOT NULL, amount REAL NOT NULL, user_id INTEGER NOT NULL, FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
+        "DROP TABLE IF EXISTS settings;",
+        "DROP TABLE IF EXISTS audit_logs;",
+        "CREATE TABLE roles (id_role INTEGER PRIMARY KEY, role_name TEXT NOT NULL, is_deleted INTEGER DEFAULT 0);",
+        "CREATE TABLE users (id_user INTEGER PRIMARY KEY, username TEXT NOT NULL, email TEXT NOT NULL, password TEXT NOT NULL, role_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(role_id) REFERENCES roles(id_role));",
+        "CREATE TABLE school_years (id_school_year INTEGER PRIMARY KEY, name TEXT NOT NULL, start_date TEXT NOT NULL, end_date TEXT NOT NULL, is_active INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0);",
+        "CREATE TABLE classrooms (id_classroom INTEGER PRIMARY KEY, name TEXT NOT NULL, level TEXT NOT NULL, is_deleted INTEGER DEFAULT 0);",
+        "CREATE TABLE students (id_student INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, surname TEXT NOT NULL, gender TEXT NOT NULL, date_of_birth TEXT NOT NULL, address TEXT NOT NULL, parent_contact TEXT NOT NULL, is_deleted INTEGER DEFAULT 0);",
+        "CREATE TABLE enrollments (id_enrollment INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, classroom_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, status TEXT NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(student_id) REFERENCES students(id_student), FOREIGN KEY(classroom_id) REFERENCES classrooms(id_classroom), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year));",
+        "CREATE TABLE fees (id_fee INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, amount REAL NOT NULL, periodicity TEXT NOT NULL, is_active INTEGER DEFAULT 1, is_deleted INTEGER DEFAULT 0);",
+        "CREATE TABLE payment_types (id_payment_type INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, amount_defined REAL NOT NULL, is_deleted INTEGER DEFAULT 0);",
+        "CREATE TABLE payments (id_payment INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, payment_type_id INTEGER NOT NULL, amount REAL NOT NULL, payment_date TEXT NOT NULL, user_id INTEGER NOT NULL, period TEXT, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(student_id) REFERENCES students(id_student), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(payment_type_id) REFERENCES payment_types(id_payment_type), FOREIGN KEY(user_id) REFERENCES users(id_user));",
+        "CREATE TABLE expenses (id_expense INTEGER PRIMARY KEY, school_year_id INTEGER NOT NULL, expense_date TEXT NOT NULL, description TEXT NOT NULL, amount REAL NOT NULL, user_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
+        "CREATE TABLE staff (id_staff INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, position TEXT NOT NULL, hire_date TEXT NOT NULL, salary_base REAL NOT NULL, is_deleted INTEGER DEFAULT 0);",
+        "CREATE TABLE staff_payments (id_staff_payment INTEGER PRIMARY KEY, staff_id INTEGER NOT NULL, school_year_id INTEGER NOT NULL, amount REAL NOT NULL, payment_date TEXT NOT NULL, user_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(staff_id) REFERENCES staff(id_staff), FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
+        "CREATE TABLE cash_register (id_cash INTEGER PRIMARY KEY, school_year_id INTEGER NOT NULL, date TEXT NOT NULL, type TEXT NOT NULL, description TEXT NOT NULL, amount REAL NOT NULL, user_id INTEGER NOT NULL, is_deleted INTEGER DEFAULT 0, FOREIGN KEY(school_year_id) REFERENCES school_years(id_school_year), FOREIGN KEY(user_id) REFERENCES users(id_user));",
+        "CREATE TABLE settings (id_settings INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, value TEXT NOT NULL, description TEXT);",
+        "CREATE TABLE audit_logs (id_log INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, action TEXT NOT NULL, table_name TEXT NOT NULL, record_id INTEGER NOT NULL, timestamp TEXT NOT NULL, details TEXT, FOREIGN KEY(user_id) REFERENCES users(id_user));",
     ]
     for statement in schema_statements:
         cursor.execute(statement)
@@ -454,6 +499,14 @@ def _insert_dataset(cursor: sqlite3.Cursor, dataset: FakeDataset) -> None:
             "school_year_id",
             "status",
         ),
+        "fees": (
+            "id_fee",
+            "name",
+            "description",
+            "amount",
+            "periodicity",
+            "is_active",
+        ),
         "payment_types": (
             "id_payment_type",
             "name",
@@ -468,6 +521,7 @@ def _insert_dataset(cursor: sqlite3.Cursor, dataset: FakeDataset) -> None:
             "amount",
             "payment_date",
             "user_id",
+            "period",
         ),
         "expenses": (
             "id_expense",
@@ -512,6 +566,7 @@ def _insert_dataset(cursor: sqlite3.Cursor, dataset: FakeDataset) -> None:
         "school_years",
         "classrooms",
         "students",
+        "fees",
         "payment_types",
         "enrollments",
         "payments",

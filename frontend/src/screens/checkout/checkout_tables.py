@@ -33,11 +33,15 @@ class CheckoutTables:
                 filtered_entries = self.screen.cash_entries_data
             elif current_filter == "entry":
                 filtered_entries = [
-                    e for e in self.screen.cash_entries_data if e.type == "Entrée"
+                    e
+                    for e in self.screen.cash_entries_data
+                    if e.type == "entry" or e.type == "Entrée"
                 ]
             elif current_filter == "exit":
                 filtered_entries = [
-                    e for e in self.screen.cash_entries_data if e.type == "Sortie"
+                    e
+                    for e in self.screen.cash_entries_data
+                    if e.type == "exit" or e.type == "Sortie"
                 ]
 
             # Get paginated entries
@@ -185,21 +189,21 @@ class CheckoutTables:
             controls=[
                 CheckoutComponents.create_stat_card(
                     title=self.screen.get_text("total_entries"),
-                    value="$ 0",
+                    value=f"0 {Constants.DEVISE}",
                     icon=Icons.ARROW_DOWNWARD,
                     color=Colors.GREEN,
                     subtitle=self.screen.get_text("student_payments"),
                 ),
                 CheckoutComponents.create_stat_card(
                     title=self.screen.get_text("total_exits"),
-                    value="$ 0",
+                    value=f"0 {Constants.DEVISE}",
                     icon=Icons.ARROW_UPWARD,
                     color=Colors.RED,
                     subtitle=self.screen.get_text("expenses_and_salaries"),
                 ),
                 CheckoutComponents.create_stat_card(
                     title=self.screen.get_text("current_balance"),
-                    value="$ 0",
+                    value=f"0 {Constants.DEVISE}",
                     icon=Icons.ACCOUNT_BALANCE_WALLET,
                     color=Constants.PRIMARY_COLOR,
                     subtitle=self.screen.get_text("available_cash"),
@@ -219,17 +223,17 @@ class CheckoutTables:
                     # Update total entries card
                     cards[0].content.controls[1].controls[
                         1
-                    ].value = f"$ {stats['total_in']:,.0f}"
+                    ].value = f"{stats['total_in']:,.0f} {Constants.DEVISE}"
 
                     # Update total exits card
                     cards[1].content.controls[1].controls[
                         1
-                    ].value = f"$ {stats['total_out']:,.0f}"
+                    ].value = f"{stats['total_out']:,.0f} {Constants.DEVISE}"
 
                     # Update balance card
                     cards[2].content.controls[1].controls[
                         1
-                    ].value = f"$ {stats['balance']:,.0f}"
+                    ].value = f"{stats['balance']:,.0f} {Constants.DEVISE}"
 
                     # Only update if the control has a page (is added to the page)
                     if self.screen.statistics_row.page:

@@ -25,6 +25,7 @@ class AdminForms:
         self._build_classroom_form()
         self._build_school_year_form()
         self._build_staff_form()
+        self._build_fee_form()
 
     def _build_user_form(self):
         """Build user form components"""
@@ -428,6 +429,129 @@ class AdminForms:
             ],
         )
 
+    def _build_fee_form(self):
+        """Build fee form components"""
+        self.parent.fee_name_field = TextField(
+            label=self.parent.get_text("fee_name"),
+            hint_text=self.parent.get_text("enter_fee_name"),
+            autofocus=True,
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper="Nom du frais (ex: Minerval, Transport)",
+        )
+
+        self.parent.fee_description_field = TextField(
+            label=self.parent.get_text("enter_description"),
+            hint_text=self.parent.get_text("enter_description"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper="Description détaillée du frais",
+            multiline=True,
+            min_lines=2,
+            max_lines=3,
+        )
+
+        self.parent.fee_amount_field = TextField(
+            label=self.parent.get_text("amount"),
+            hint_text=self.parent.get_text("enter_amount"),
+            text_align=TextAlign.LEFT,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            helper="Montant du frais",
+            keyboard_type=KeyboardType.NUMBER,
+            input_filter=NumbersOnlyInputFilter(),
+        )
+
+        self.parent.fee_periodicity_dropdown = Dropdown(
+            label="Périodicité",
+            border_radius=BorderRadius.all(5),
+            options=[
+                DropdownOption(key="monthly", text="Mensuel"),
+                DropdownOption(key="quarterly", text="Trimestriel"),
+                DropdownOption(key="semester", text="Semestriel"),
+                DropdownOption(key="annual", text="Annuel"),
+                DropdownOption(key="one_time", text="Paiement unique"),
+            ],
+            expand=1,
+            helper_text="Fréquence de paiement du frais",
+        )
+
+        self.parent.fee_is_active_switch = Switch(
+            label="Actif",
+            value=True,
+            active_color=Constants.PRIMARY_COLOR,
+        )
+
+        self.parent.fee_submit_button = Button(
+            content=self.parent.get_text("submit"),
+            icon=Icons.SAVE,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.PRIMARY_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self.parent._submit_fee_form,
+        )
+
+        self.parent.fee_cancel_button = Button(
+            content=self.parent.get_text("cancel"),
+            icon=Icons.CANCEL,
+            style=ButtonStyle(
+                shape=RoundedRectangleBorder(radius=5),
+                bgcolor=Constants.CANCEL_COLOR,
+                padding=Padding(10, 20, 10, 20),
+                color="white",
+            ),
+            on_click=self.parent._close_form,
+        )
+
+        self.parent.fee_form_container = Column(
+            horizontal_alignment=CrossAxisAlignment.STRETCH,
+            controls=[
+                Text(
+                    value="Ajouter un frais",
+                    style=TextStyle(
+                        size=18,
+                        weight=FontWeight.BOLD,
+                        color=Constants.PRIMARY_COLOR,
+                    ),
+                ),
+                Row(
+                    controls=[
+                        self.parent.fee_name_field,
+                        self.parent.fee_amount_field,
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Row(
+                    controls=[
+                        self.parent.fee_description_field,
+                        self.parent.fee_periodicity_dropdown,
+                        Container(
+                            content=self.parent.fee_is_active_switch,
+                            padding=Padding.symmetric(horizontal=10),
+                        ),
+                    ],
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=CrossAxisAlignment.CENTER,
+                ),
+                Row(
+                    controls=[
+                        self.parent.fee_submit_button,
+                        self.parent.fee_cancel_button,
+                    ],
+                    alignment=MainAxisAlignment.END,
+                ),
+            ],
+        )
+
     def clear_all_forms(self):
         """Clear all form fields"""
         # Clear user form
@@ -456,6 +580,14 @@ class AdminForms:
             self.parent.staff_position_field.value = ""
             self.parent.staff_hire_date_field.value = "2024-01-01"
             self.parent.staff_salary_field.value = ""
+
+        # Clear fee form
+        if hasattr(self.parent, "fee_name_field"):
+            self.parent.fee_name_field.value = ""
+            self.parent.fee_description_field.value = ""
+            self.parent.fee_amount_field.value = ""
+            self.parent.fee_periodicity_dropdown.value = None
+            self.parent.fee_is_active_switch.value = True
 
     def populate_roles_dropdown(self):
         """Populate roles dropdown with available roles"""
