@@ -7,6 +7,7 @@ from models import (
     EnrollmentModel,
     PaymentModel,
     PaymentTypeModel,
+    FeeModel,
 )
 from .payment_services import PaymentServices
 import asyncio
@@ -259,6 +260,16 @@ class PaymentScreen:
             helper=self.get_text("date_format_yyyy_mm_dd"),
         )
 
+        # Period selector (dynamically shown based on fee periodicity)
+        self.period_dropdown = Dropdown(
+            label="Période",
+            border_radius=BorderRadius.all(5),
+            options=[],
+            expand=1,
+            helper_text="Sélectionner la période",
+            visible=False,
+        )
+
         self.student_class_text_info = Text(
             value="",
             size=14,
@@ -330,6 +341,7 @@ class PaymentScreen:
                         alignment=MainAxisAlignment.SPACE_BETWEEN,
                         vertical_alignment=CrossAxisAlignment.CENTER,
                     ),
+                    self.period_dropdown,
                     Row(
                         controls=[
                             self.add_payment_submit_button,
@@ -495,50 +507,131 @@ class PaymentScreen:
         self.payment_date_field.value = datetime.now().strftime("%Y-%m-%d")
 
     def _populate_payment_types(self):
-        """Populate payment types dropdown"""
+        """Populate payment types dropdown with fees"""
         if self.payment_types_data:
             self.payment_type_dropdown.options = [
-                DropdownOption(key=str(pt.id_payment_type), text=pt.name)
-                for pt in self.payment_types_data
+                DropdownOption(
+                    key=str(fee.id_fee),
+                    text=f"{fee.name} ({fee.amount:.2f} $ - {fee.get_periodicity_display()})",
+                )
+                for fee in self.payment_types_data
             ]
             if hasattr(self.payment_type_dropdown, "update"):
                 self.payment_type_dropdown.update()
 
     def _on_payment_type_select(self, e):
-        """Handle payment type selection and auto-fill amount"""
+        """Handle payment type selection and auto-fill amount from fee"""
         if e.control.value:
-            payment_type_id = int(e.control.value)
-            for pt in self.payment_types_data:
-                if pt.id_payment_type == payment_type_id:
-                    self.amount_field_form.value = str(int(pt.amount_defined))
+            fee_id = int(e.control.value)
+            for fee in self.payment_types_data:
+                if fee.id_fee == fee_id:
+                    self.amount_field_form.value = str(int(fee.amount))
                     if hasattr(self.amount_field_form, "update"):
                         self.amount_field_form.update()
+
+                    # Update period dropdown based on periodicity
+                    self._update_period_options(fee.periodicity)
                     break
+
+    def _update_period_options(self, periodicity: str):
+        """Update period dropdown options based on fee periodicity"""
+        current_month = datetime.now().month
+        current_quarter = (current_month - 1) // 3 + 1
+        current_semester = 1 if current_month <= 6 else 2
+
+        if periodicity == "monthly":
+            months = [
+                "Janvier",
+                "Février",
+                "Mars",
+                "Avril",
+                "Mai",
+                "Juin",
+                "Juillet",
+                "Août",
+                "Septembre",
+                "Octobre",
+                "Novembre",
+                "Décembre",
+            ]
+            self.period_dropdown.options = [
+                DropdownOption(key=str(i + 1), text=month)
+                for i, month in enumerate(months)
+            ]
+            self.period_dropdown.value = str(current_month)
+            self.period_dropdown.visible = True
+
+        elif periodicity == "quarterly":
+            quarters = ["Trimestre 1", "Trimestre 2", "Trimestre 3"]
+            self.period_dropdown.options = [
+                DropdownOption(key=f"Q{i+1}", text=quarter)
+                for i, quarter in enumerate(quarters)
+            ]
+            self.period_dropdown.value = f"Q{current_quarter}"
+            self.period_dropdown.visible = True
+
+        elif periodicity == "semester":
+            semesters = ["Semestre 1", "Semestre 2"]
+            self.period_dropdown.options = [
+                DropdownOption(key=f"S{i+1}", text=semester)
+                for i, semester in enumerate(semesters)
+            ]
+            self.period_dropdown.value = f"S{current_semester}"
+            self.period_dropdown.visible = True
+
+        elif periodicity == "annual":
+            current_year = datetime.now().year
+            self.period_dropdown.options = [
+                DropdownOption(key=str(current_year), text=f"Année {current_year}")
+            ]
+            self.period_dropdown.value = str(current_year)
+            self.period_dropdown.visible = True
+
+        elif periodicity == "one_time":
+            # No period needed for one-time payments
+            self.period_dropdown.visible = False
+            self.period_dropdown.value = None
+
+        # Update the UI
+        if hasattr(self.period_dropdown, "update"):
+            self.period_dropdown.update()
+        if hasattr(self.container_form, "update"):
+            self.container_form.update()
 
     async def _submit_payment(self, e):
         """Submit the payment form"""
         # Validate form
         if not self.selected_student_id:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_select_student")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
+            # self.page.snack_bar = SnackBar(
+            #     Text(self.get_text("please_select_student")),
+            #     bgcolor=Constants.CANCEL_COLOR,
+            # )
+            # self.page.snack_bar.open = True
+            # self.page.update()
             return
 
         if not self.payment_type_dropdown.value:
-            self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_select_payment_type")),
-                bgcolor=Constants.CANCEL_COLOR,
-            )
-            self.page.snack_bar.open = True
-            self.page.update()
+            # self.page.snack_bar = SnackBar(
+            #     Text(self.get_text("please_select_payment_type")),
+            #     bgcolor=Constants.CANCEL_COLOR,
+            # )
+            # self.page.snack_bar.open = True
+            # self.page.update()
             return
 
         if not self.amount_field_form.value:
+            # self.page.snack_bar = SnackBar(
+            #     Text(self.get_text("please_enter_amount")),
+            #     bgcolor=Constants.CANCEL_COLOR,
+            # )
+            # self.page.snack_bar.open = True
+            # self.page.update()
+            return
+
+        # Validate period if required
+        if self.period_dropdown.visible and not self.period_dropdown.value:
             self.page.snack_bar = SnackBar(
-                Text(self.get_text("please_enter_amount")),
+                Text("Veuillez sélectionner une période"),
                 bgcolor=Constants.CANCEL_COLOR,
             )
             self.page.snack_bar.open = True
@@ -558,6 +651,14 @@ class PaymentScreen:
             self.page.update()
             return
 
+        # Get period label for display
+        period_label = None
+        if self.period_dropdown.visible and self.period_dropdown.value:
+            for option in self.period_dropdown.options:
+                if option.key == self.period_dropdown.value:
+                    period_label = option.text
+                    break
+
         # Create payment data
         payment_data = {
             "student_id": self.selected_student_id,
@@ -570,6 +671,7 @@ class PaymentScreen:
                 if self.app_state.current_user
                 else 1
             ),
+            "period": period_label,
         }
 
         # Submit payment
@@ -754,8 +856,8 @@ class PaymentScreen:
 
         # Apply payment type filter
         if self.selected_payment_type_filter != "all":
-            payment_type_id = int(self.selected_payment_type_filter)
-            filtered = [p for p in filtered if p.payment_type_id == payment_type_id]
+            fee_id = int(self.selected_payment_type_filter)
+            filtered = [p for p in filtered if p.payment_type_id == fee_id]
 
         # Apply classroom filter
         if self.selected_classroom_filter != "all":
@@ -771,7 +873,7 @@ class PaymentScreen:
         self.filtered_payments = filtered
 
     def _update_payment_type_filter_options(self):
-        """Update payment type filter dropdown options"""
+        """Update payment type filter dropdown options with fees"""
         if not hasattr(self, "payment_type_filter_dropdown"):
             return
 
@@ -779,8 +881,8 @@ class PaymentScreen:
             DropdownOption(key="all", text=self.get_text("all_types")),
         ]
 
-        for pt in self.payment_types_data:
-            options.append(DropdownOption(key=str(pt.id_payment_type), text=pt.name))
+        for fee in self.payment_types_data:
+            options.append(DropdownOption(key=str(fee.id_fee), text=fee.name))
 
         self.payment_type_filter_dropdown.options = options
 
@@ -865,10 +967,10 @@ class PaymentScreen:
         return "N/A"
 
     def _get_payment_type_name(self, payment_type_id: int) -> str:
-        """Get payment type name by ID"""
-        for pt in self.payment_types_data:
-            if pt.id_payment_type == payment_type_id:
-                return pt.name
+        """Get payment type name by ID (from fees)"""
+        for fee in self.payment_types_data:
+            if fee.id_fee == payment_type_id:
+                return fee.name
         return "N/A"
 
     def _get_classroom_name(self, student_id: int) -> str:
@@ -899,23 +1001,40 @@ class PaymentScreen:
         payment_type_name = self._get_payment_type_name(payment.payment_type_id)
         formatted_date = Utils.format_date(payment.payment_date)
 
-        dialog_content = Column(
-            controls=[
-                Text(
-                    f"{self.get_text('student')}: {student_name}",
-                    size=14,
-                ),
-                Divider(height=1),
-                Text(
-                    f"{self.get_text('classroom')}: {classroom_name}",
-                    size=14,
-                ),
-                Divider(height=1),
-                Text(
-                    f"{self.get_text('payment_type')}: {payment_type_name}",
-                    size=14,
-                ),
-                Divider(height=1),
+        dialog_controls = [
+            Text(
+                f"{self.get_text('student')}: {student_name}",
+                size=14,
+            ),
+            Divider(height=1),
+            Text(
+                f"{self.get_text('classroom')}: {classroom_name}",
+                size=14,
+            ),
+            Divider(height=1),
+            Text(
+                f"{self.get_text('payment_type')}: {payment_type_name}",
+                size=14,
+            ),
+            Divider(height=1),
+        ]
+
+        # Add period if available
+        if payment.period:
+            dialog_controls.extend(
+                [
+                    Text(
+                        f"Période: {payment.period}",
+                        size=14,
+                        weight=FontWeight.BOLD,
+                        color=Constants.SECONDARY_COLOR,
+                    ),
+                    Divider(height=1),
+                ]
+            )
+
+        dialog_controls.extend(
+            [
                 Text(
                     f"{self.get_text('amount')}: {payment.amount:,.0f} FC",
                     size=14,
@@ -925,7 +1044,11 @@ class PaymentScreen:
                     f"{self.get_text('payment_date')}: {formatted_date}",
                     size=14,
                 ),
-            ],
+            ]
+        )
+
+        dialog_content = Column(
+            controls=dialog_controls,
             spacing=10,
         )
 
@@ -977,6 +1100,15 @@ class PaymentScreen:
                     Container(
                         content=Text(
                             self.get_text("payment_type"),
+                            weight=FontWeight.BOLD,
+                            color="white",
+                        ),
+                        expand=1,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            "Période",
                             weight=FontWeight.BOLD,
                             color="white",
                         ),
@@ -1040,6 +1172,19 @@ class PaymentScreen:
                     ),
                     Container(
                         content=Text(payment_type_name, size=14),
+                        expand=1,
+                        padding=Padding.all(10),
+                    ),
+                    Container(
+                        content=Text(
+                            payment.period if payment.period else "-",
+                            size=14,
+                            color=(
+                                Constants.SECONDARY_COLOR
+                                if payment.period
+                                else Colors.GREY_400
+                            ),
+                        ),
                         expand=1,
                         padding=Padding.all(10),
                     ),

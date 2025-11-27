@@ -20,7 +20,7 @@ from .admin_forms import AdminForms
 from .admin_form_handlers import AdminFormHandlers
 from .admin_tables import AdminTables
 from .admin_dialogs import AdminDialogs
-from models import UserModel, ClassroomModel, SchoolYearModel, StaffModel
+from models import UserModel, ClassroomModel, SchoolYearModel, StaffModel, FeeModel
 
 
 class AdminScreen:
@@ -39,6 +39,7 @@ class AdminScreen:
         self.classrooms_data = []
         self.staff_data = []
         self.school_year_data = []
+        self.fees_data = []
 
         # Initialize modules
         self.forms = AdminForms(self)
@@ -96,11 +97,13 @@ class AdminScreen:
                 (classrooms_status, classrooms_data),
                 (staff_status, staff_data),
                 (school_year_status, school_year_data),
+                (fees_status, fees_data),
             ) = await asyncio.gather(
                 self.services.load_users_data(),
                 self.services.load_classrooms_data(),
                 self.services.load_staff_data(),
                 self.services.load_school_years_data(),
+                self.services.load_fees_data(),
                 return_exceptions=True,
             )
 
@@ -109,6 +112,7 @@ class AdminScreen:
             self.classrooms_data = classrooms_data if classrooms_status else []
             self.staff_data = staff_data if staff_status else []
             self.school_year_data = school_year_data if school_year_status else []
+            self.fees_data = fees_data if fees_status else []
 
             # Calculate statistics
             total_users = len(self.users_data)
@@ -167,6 +171,8 @@ class AdminScreen:
                     await self.tables.update_school_year_table()
                 case "staff":
                     await self.tables.update_staff_table()
+                case "fees":
+                    await self.tables.update_fee_table()
 
             try:
                 self.main_content.update()
@@ -235,6 +241,12 @@ class AdminScreen:
                     leading_icon=Icons.PERSON,
                     data="staff",
                 ),
+                DropdownOption(
+                    key="fees",
+                    text="Gestion des frais",
+                    leading_icon=Icons.PAYMENTS,
+                    data="fees",
+                ),
             ],
             dense=True,
             on_change=self._handle_active_menu_change,
@@ -262,6 +274,8 @@ class AdminScreen:
                 await self.tables.update_school_year_table()
             case "staff":
                 await self.tables.update_staff_table()
+            case "fees":
+                await self.tables.update_fee_table()
 
         try:
             self.main_content.update()
@@ -297,6 +311,8 @@ class AdminScreen:
             self.add_container.content = self.school_year_form_container
         elif active_menu == "staff":
             self.add_container.content = self.staff_form_container
+        elif active_menu == "fees":
+            self.add_container.content = self.fee_form_container
 
         # Show container and update button
         self.add_container.visible = True
@@ -338,6 +354,10 @@ class AdminScreen:
     async def _submit_staff_form(self, e):
         """Submit staff form"""
         await self.form_handlers.submit_staff_form(e)
+
+    async def _submit_fee_form(self, e):
+        """Submit fee form"""
+        await self.form_handlers.submit_fee_form(e)
 
     # ========================================================================
     # TABLE UPDATE METHODS (Delegated to tables module)
@@ -383,6 +403,10 @@ class AdminScreen:
         """Open staff edit dialog"""
         self.dialogs.open_staff_edit_dialog(staff)
 
+    def _open_fee_edit_dialog(self, fee):
+        """Open fee edit dialog"""
+        self.dialogs.open_fee_edit_dialog(fee)
+
     def _open_user_delete_dialog(self, user):
         """Open user delete dialog"""
         self.dialogs.open_user_delete_dialog(user)
@@ -398,6 +422,10 @@ class AdminScreen:
     def _open_staff_delete_dialog(self, staff):
         """Open staff delete dialog"""
         self.dialogs.open_staff_delete_dialog(staff)
+
+    def _open_fee_delete_dialog(self, fee):
+        """Open fee delete dialog"""
+        self.dialogs.open_fee_delete_dialog(fee)
 
     # ========================================================================
     # MAIN BUILD METHOD

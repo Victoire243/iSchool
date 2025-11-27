@@ -27,8 +27,12 @@ class PaymentServices:
         return (True, await self.app_state.api_client.list_payments())
 
     async def load_payment_types_data(self):
-        """Load all payment types data"""
-        return (True, await self.app_state.api_client.list_payment_types())
+        """Load all payment types data (now loading fees)"""
+        # Load fees instead of payment_types
+        fees = await self.app_state.api_client.list_fees()
+        # Filter only active fees
+        active_fees = [fee for fee in fees if fee.is_active]
+        return (True, active_fees)
 
     async def create_payment(self, payment_data: dict):
         """Create a new payment"""

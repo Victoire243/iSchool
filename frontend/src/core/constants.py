@@ -7,6 +7,8 @@ class Constants:
     # BACKGROUND_IMAGE = "assets/images/background_login.png"
     BACKGROUND_COLOR = "#FFFFFF"
 
+    DEVISE = "FC"
+
     # Storage keys
     STORAGE_KEY_IS_LOGGED_IN = "is_logged_in"
     STORAGE_KEY_FIRST_LAUNCH = "first_launch"

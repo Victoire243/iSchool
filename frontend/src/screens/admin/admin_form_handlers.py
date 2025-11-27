@@ -118,3 +118,44 @@ class AdminFormHandlers:
         # Close form and refresh data
         self.parent._close_form(e)
         await self.parent.load_data()
+
+    async def submit_fee_form(self, e):
+        """Submit fee form"""
+        # Validate fields
+        if not self.parent.fee_name_field.value:
+            return
+
+        if not self.parent.fee_description_field.value:
+            return
+
+        if not self.parent.fee_amount_field.value:
+            return
+
+        if not self.parent.fee_periodicity_dropdown.value:
+            return
+
+        # Create fee data
+        fee_data = {
+            "name": self.parent.fee_name_field.value,
+            "description": self.parent.fee_description_field.value,
+            "amount": float(self.parent.fee_amount_field.value),
+            "periodicity": self.parent.fee_periodicity_dropdown.value,
+            "is_active": self.parent.fee_is_active_switch.value,
+        }
+
+        try:
+            # Submit to service
+            await self.parent.app_state.api_client.create_fee(
+                name=fee_data["name"],
+                description=fee_data["description"],
+                amount=fee_data["amount"],
+                periodicity=fee_data["periodicity"],
+                is_active=fee_data["is_active"],
+            )
+            print(f"Fee created successfully: {fee_data}")
+        except Exception as ex:
+            print(f"Error creating fee: {ex}")
+
+        # Close form and refresh data
+        self.parent._close_form(e)
+        await self.parent.load_data()

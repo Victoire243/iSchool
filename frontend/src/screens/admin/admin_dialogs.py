@@ -30,6 +30,7 @@ from models.user_model import UserModel
 from models.classroom_model import ClassroomModel
 from models.school_year_model import SchoolYearModel
 from models.staff_model import StaffModel
+from models.fee_model import FeeModel
 
 
 class AdminDialogs:
@@ -49,11 +50,13 @@ class AdminDialogs:
         self.current_editing_classroom_id = None
         self.current_editing_school_year_id = None
         self.current_editing_staff_id = None
+        self.current_editing_fee_id = None
 
         self.current_deleting_user_id = None
         self.current_deleting_classroom_id = None
         self.current_deleting_school_year_id = None
         self.current_deleting_staff_id = None
+        self.current_deleting_fee_id = None
 
     def build_all_dialogs(self):
         """Construire tous les dialogues"""
@@ -70,6 +73,7 @@ class AdminDialogs:
         self._build_classroom_edit_dialog()
         self._build_school_year_edit_dialog()
         self._build_staff_edit_dialog()
+        self._build_fee_edit_dialog()
 
     def _build_user_edit_dialog(self):
         """Construire le dialogue d'édition utilisateur"""
@@ -483,6 +487,7 @@ class AdminDialogs:
         self._build_classroom_delete_dialog()
         self._build_school_year_delete_dialog()
         self._build_staff_delete_dialog()
+        self._build_fee_delete_dialog()
 
     def _build_user_delete_dialog(self):
         """Construire le dialogue de suppression utilisateur"""
@@ -1192,3 +1197,303 @@ class AdminDialogs:
             DropdownOption(key="3", text="Comptable"),
             DropdownOption(key="4", text="Surveillant"),
         ]
+
+    #################################################################
+    # DIALOGUES POUR LES FRAIS (FEES)
+    #################################################################
+
+    def _build_fee_edit_dialog(self):
+        """Construire le dialogue d'édition frais"""
+        self.edit_fee_name_field = TextField(
+            label="Nom du frais",
+            hint_text="Entrer le nom",
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+        )
+
+        self.edit_fee_description_field = TextField(
+            label="Description",
+            hint_text="Entrer la description",
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            multiline=True,
+            min_lines=2,
+            max_lines=3,
+        )
+
+        self.edit_fee_amount_field = TextField(
+            label="Montant",
+            hint_text="Entrer le montant",
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+            expand=1,
+            keyboard_type=KeyboardType.NUMBER,
+        )
+
+        self.edit_fee_periodicity_dropdown = Dropdown(
+            label="Périodicité",
+            border_radius=BorderRadius.all(5),
+            options=[
+                DropdownOption(key="monthly", text="Mensuel"),
+                DropdownOption(key="quarterly", text="Trimestriel"),
+                DropdownOption(key="semester", text="Semestriel"),
+                DropdownOption(key="annual", text="Annuel"),
+                DropdownOption(key="one_time", text="Paiement unique"),
+            ],
+            expand=1,
+            width=float("inf"),
+        )
+
+        self.edit_fee_is_active_switch = Switch(
+            label="Actif",
+            value=True,
+            active_color=Constants.PRIMARY_COLOR,
+        )
+
+        self.edit_fee_dialog = AlertDialog(
+            modal=True,
+            scrollable=True,
+            bgcolor="#f8faff",
+            title=Container(
+                content=Text(
+                    "Modifier le frais",
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                border_radius=BorderRadius.all(10),
+                bgcolor=Constants.PRIMARY_COLOR,
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Row(
+                            controls=[
+                                self.edit_fee_name_field,
+                                self.edit_fee_amount_field,
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                        self.edit_fee_description_field,
+                        Row(
+                            controls=[
+                                self.edit_fee_periodicity_dropdown,
+                                Container(
+                                    content=self.edit_fee_is_active_switch,
+                                    padding=Padding.symmetric(horizontal=10),
+                                ),
+                            ],
+                            spacing=10,
+                            alignment=MainAxisAlignment.SPACE_BETWEEN,
+                        ),
+                    ],
+                    spacing=15,
+                    tight=True,
+                ),
+                width=600,
+                padding=Padding.all(20),
+                align=Alignment.CENTER_LEFT,
+                alignment=Alignment.CENTER_LEFT,
+                clip_behavior=ClipBehavior.HARD_EDGE,
+                **self.parent.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text(self.parent.get_text("cancel")),
+                    on_click=self._close_fee_edit_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text(self.parent.get_text("update")),
+                    on_click=self._save_fee_changes,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.PRIMARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def _build_fee_delete_dialog(self):
+        """Construire le dialogue de suppression frais"""
+        self.fee_name_to_be_deleted = Text(
+            value="",
+            weight=FontWeight.BOLD,
+            color=Constants.CANCEL_COLOR,
+        )
+
+        self.delete_fee_motive_field = TextField(
+            label="Motif de suppression",
+            hint_text="Entrer le motif",
+            multiline=True,
+            min_lines=3,
+            max_lines=5,
+            border_color=Constants.PRIMARY_COLOR,
+            focused_border_color=Constants.PRIMARY_COLOR,
+        )
+
+        self.delete_fee_dialog = AlertDialog(
+            modal=True,
+            title=Container(
+                content=Text(
+                    "Confirmer la suppression",
+                    weight=FontWeight.BOLD,
+                    color="white",
+                ),
+                padding=Padding.symmetric(horizontal=20, vertical=10),
+                bgcolor=Constants.CANCEL_COLOR,
+                border_radius=BorderRadius.all(10),
+            ),
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text("Voulez-vous vraiment supprimer ce frais ?"),
+                        Container(
+                            content=Row(
+                                controls=[
+                                    Text("Frais : "),
+                                    self.fee_name_to_be_deleted,
+                                ],
+                            ),
+                            padding=Padding.symmetric(vertical=10),
+                        ),
+                        self.delete_fee_motive_field,
+                    ],
+                    tight=True,
+                    spacing=10,
+                ),
+                width=500,
+                padding=Padding.all(20),
+                **self.parent.get_box_style(),
+            ),
+            actions=[
+                Button(
+                    content=Text("Annuler"),
+                    on_click=self._close_fee_delete_dialog,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.SECONDARY_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+                Button(
+                    content=Text("Confirmer"),
+                    on_click=self._confirm_delete_fee,
+                    style=ButtonStyle(
+                        shape=RoundedRectangleBorder(radius=5),
+                        bgcolor=Constants.CANCEL_COLOR,
+                        padding=Padding(10, 20, 10, 20),
+                        color="white",
+                    ),
+                ),
+            ],
+            actions_alignment=MainAxisAlignment.END,
+        )
+
+    def open_fee_edit_dialog(self, fee: FeeModel):
+        """Ouvrir le dialogue d'édition frais"""
+        if not fee:
+            return
+
+        self.current_editing_fee_id = fee.id_fee
+        self.edit_fee_name_field.value = fee.name
+        self.edit_fee_description_field.value = fee.description
+        self.edit_fee_amount_field.value = str(fee.amount)
+        self.edit_fee_periodicity_dropdown.value = fee.periodicity
+        self.edit_fee_is_active_switch.value = fee.is_active
+
+        self.parent.page.show_dialog(self.edit_fee_dialog)
+        self.parent.page.update()
+
+    def _close_fee_edit_dialog(self, e=None):
+        """Fermer le dialogue d'édition frais"""
+        self.edit_fee_dialog.open = False
+        self.parent.page.update()
+
+    async def _save_fee_changes(self, e):
+        """Enregistrer les modifications du frais"""
+        if not self.edit_fee_name_field.value or not self.edit_fee_amount_field.value:
+            return
+
+        try:
+            # Update via API
+            await self.parent.app_state.api_client.update_fee(
+                fee_id=self.current_editing_fee_id,
+                name=self.edit_fee_name_field.value,
+                description=self.edit_fee_description_field.value,
+                amount=float(self.edit_fee_amount_field.value),
+                periodicity=self.edit_fee_periodicity_dropdown.value,
+                is_active=self.edit_fee_is_active_switch.value,
+            )
+
+            # Update local data
+            for fee in self.parent.fees_data:
+                if fee.id_fee == self.current_editing_fee_id:
+                    fee.name = self.edit_fee_name_field.value
+                    fee.description = self.edit_fee_description_field.value
+                    fee.amount = float(self.edit_fee_amount_field.value)
+                    fee.periodicity = self.edit_fee_periodicity_dropdown.value
+                    fee.is_active = self.edit_fee_is_active_switch.value
+                    break
+
+            self._close_fee_edit_dialog()
+            await self.parent.tables.update_fee_table()
+        except Exception as ex:
+            print(f"Error updating fee: {ex}")
+
+    def open_fee_delete_dialog(self, fee: FeeModel):
+        """Ouvrir le dialogue de suppression frais"""
+        if not fee:
+            return
+
+        self.current_deleting_fee_id = fee.id_fee
+        self.fee_name_to_be_deleted.value = fee.name
+        self.delete_fee_motive_field.value = ""
+
+        self.parent.page.show_dialog(self.delete_fee_dialog)
+        self.parent.page.update()
+
+    def _close_fee_delete_dialog(self, e=None):
+        """Fermer le dialogue de suppression frais"""
+        self.delete_fee_dialog.open = False
+        self.parent.page.update()
+
+    async def _confirm_delete_fee(self, e):
+        """Confirmer la suppression du frais"""
+        if (
+            not self.delete_fee_motive_field.value
+            or not self.delete_fee_motive_field.value.strip()
+        ):
+            return
+
+        try:
+            # Delete via API
+            await self.parent.app_state.api_client.delete_fee(
+                self.current_deleting_fee_id
+            )
+
+            # Remove from local data
+            self.parent.fees_data = [
+                f
+                for f in self.parent.fees_data
+                if f.id_fee != self.current_deleting_fee_id
+            ]
+
+            self._close_fee_delete_dialog()
+            await self.parent.tables.update_fee_table()
+        except Exception as ex:
+            print(f"Error deleting fee: {ex}")
