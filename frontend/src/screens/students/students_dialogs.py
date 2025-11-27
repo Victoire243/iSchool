@@ -698,9 +698,9 @@ class StudentsDialogs:
 
             if success:
                 self.close_import_dialog()
-                self.screen.show_success_snackbar(
-                    f"{imported_count} {self.screen.get_text('students_imported')}"
-                )
+                # self.screen.show_success_snackbar(
+                #     f"{imported_count} {self.screen.get_text('students_imported')}"
+                # )
                 # Reload data
                 await self.screen.load_data()
             else:
@@ -713,9 +713,9 @@ class StudentsDialogs:
 
         except Exception as ex:
             print(f"Error during import: {ex}")
-            self.screen.show_error_snackbar(
-                f"{self.screen.get_text('import_error')}: {str(ex)}"
-            )
+            # self.screen.show_error_snackbar(
+            #     f"{self.screen.get_text('import_error')}: {str(ex)}"
+            # )
             self.screen.import_confirm_button.disabled = False
             self.screen.import_confirm_button.content = Text(
                 self.screen.get_text("import")

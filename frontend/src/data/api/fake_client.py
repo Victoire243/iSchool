@@ -703,14 +703,18 @@ class FakeApiClient:
         totals["payments_count"] = float(len(payments))
         return totals
 
-    async def create_student(self, student: StudentModel) -> bool:
+    async def create_student(self, student: StudentModel, classroom_id: int) -> bool:
         """Create a new student"""
         connection = await self._ensure_connection()
         try:
-            await connection.execute(
+            school_year = await self.get_active_school_year()
+            school_year_id = school_year.id_school_year if school_year else None
+            if school_year_id is None:
+                return False
+
+            async with connection.execute(
                 """
-                INSERT INTO students (first_name, last_name, surname, gender, 
-                                     date_of_birth, address, parent_contact)
+                INSERT INTO students (first_name, last_name, surname, gender, date_of_birth, address, parent_contact)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
@@ -722,6 +726,14 @@ class FakeApiClient:
                     student.address,
                     student.parent_contact,
                 ),
+            ) as cursor:
+                await connection.commit()
+                new_student_id = cursor.lastrowid
+
+            await connection.execute(
+                """ INSERT INTO enrollments (student_id, classroom_id, school_year_id, status)
+                VALUES (?, ?, ?, ?) """,
+                (new_student_id, classroom_id, school_year_id, "admitted"),
             )
             await connection.commit()
             return True
@@ -766,10 +778,15 @@ class FakeApiClient:
                     # Create enrollment
                     await connection.execute(
                         """
-                        INSERT INTO enrollments (student_id, classroom_id, school_year_id)
-                        VALUES (?, ?, ?)
+                        INSERT INTO enrollments (student_id, classroom_id, school_year_id, status)
+                        VALUES (?, ?, ?, ?)
                         """,
-                        (student_id, classroom_id, active_year.id_school_year),
+                        (
+                            student_id,
+                            classroom_id,
+                            active_year.id_school_year,
+                            "admitted",
+                        ),
                     )
 
                     imported_count += 1
@@ -786,7 +803,9 @@ class FakeApiClient:
             await connection.rollback()
             return False, imported_count
 
-    async def update_student(self, student: StudentModel) -> bool:
+    async def update_student(
+        self, student: StudentModel, new_classroom_id: int
+    ) -> bool:
         """Update an existing student"""
         connection = await self._ensure_connection()
         try:
@@ -809,6 +828,25 @@ class FakeApiClient:
                 ),
             )
             await connection.commit()
+            # Update enrollment if classroom changed
+            enrollment_row = await self._fetch_one(
+                """
+                SELECT * FROM enrollments 
+                WHERE student_id = ? AND is_deleted = 0
+                ORDER BY id_enrollment DESC LIMIT 1
+                """,
+                (student.id_student,),
+            )
+            if enrollment_row and enrollment_row["classroom_id"] != new_classroom_id:
+                await connection.execute(
+                    """
+                    UPDATE enrollments 
+                    SET classroom_id = ?
+                    WHERE id_enrollment = ?
+                    """,
+                    (new_classroom_id, enrollment_row["id_enrollment"]),
+                )
+                await connection.commit()
             return True
         except Exception as e:
             print(f"Error updating student: {e}")

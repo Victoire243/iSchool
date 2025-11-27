@@ -22,10 +22,15 @@ class StudentsServices:
         # await asyncio.sleep(2)  # Simulate network delay
         return (True, await self.app_state.api_client.list_enrollments())
 
-    async def update_student(self, student):
+    async def update_student(self, student, classroom_id: int) -> bool:
         """Update a student"""
         # await asyncio.sleep(1)  # Simulate network delay
-        return await self.app_state.api_client.update_student(student)
+        return await self.app_state.api_client.update_student(student, classroom_id)
+
+    async def delete_student(self, student_id: int) -> bool:
+        """Delete a student"""
+        # await asyncio.sleep(1)  # Simulate network delay
+        return await self.app_state.api_client.delete_student(student_id)
 
     async def import_students(self, students_list, classroom_id):
         """Import multiple students"""
@@ -34,5 +39,5 @@ class StudentsServices:
             students_list, classroom_id
         )
 
-    async def create_student(self, student):
-        return await self.app_state.api_client.create_student(student)
+    async def create_student(self, student, classroom_id: int):
+        return await self.app_state.api_client.create_student(student, classroom_id)

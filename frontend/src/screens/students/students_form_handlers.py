@@ -88,7 +88,8 @@ class StudentsFormHandlers:
                     "parent_contact": parent_contact,
                     "is_deleted": False,
                 }
-            )
+            ),
+            classroom_id,
         )
         if response:
             print("Student created successfully")
@@ -113,8 +114,13 @@ class StudentsFormHandlers:
                 parent_contact=self.screen.edit_parent_contact_field.value.strip(),
             )
 
-            # TODO: Call API to update student
-            # success = await self.screen.services.update_student(updated_student)
+            success = await self.screen.services.update_student(
+                updated_student, int(self.screen.edit_classroom_dropdown.value)
+            )
+            if not success:
+                print("API call to update student failed")
+            else:
+                print("Student updated successfully")
 
             # For now, update locally
             for i, student in enumerate(self.screen.students_data):
@@ -138,14 +144,33 @@ class StudentsFormHandlers:
 
         except Exception as ex:
             print(f"Error updating student: {ex}")
-            self.screen.page.show_snack_bar(
-                SnackBar(
-                    content=Text(self.screen.get_text("error_updating_student")),
-                    bgcolor=Colors.RED,
-                )
-            )
+            # self.screen.page.show_snack_bar(
+            #     SnackBar(
+            #         content=Text(self.screen.get_text("error_updating_student")),
+            #         bgcolor=Colors.RED,
+            #     )
+            # )
 
     async def confirm_delete_student(self, e):
         """Confirm deletion of the student"""
-        # TODO implementation here
-        self.screen.dialogs.close_delete_dialog()
+        try:
+            success = await self.screen.services.delete_student(
+                self.screen.current_deleting_student_id
+            )
+            if not success:
+                print("API call to delete student failed")
+            else:
+                print("Student deleted successfully")
+
+            # Refresh the students data
+            self.screen.refresh_students_data(None)
+        except Exception as ex:
+            print(f"Error deleting student: {ex}")
+            # self.screen.page.show_snack_bar(
+            #     SnackBar(
+            #         content=Text(self.screen.get_text("error_deleting_student")),
+            #         bgcolor=Colors.RED,
+            #     )
+            # )
+        finally:
+            self.screen.dialogs.close_delete_dialog()
