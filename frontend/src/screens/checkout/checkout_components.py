@@ -120,7 +120,7 @@ class CheckoutComponents:
                         expand=True,
                     ),
                     Text(
-                        f"{'+' if is_entry else '-'}{amount:,.0f} $",
+                        f"{'+' if is_entry else '-'}{amount:,.0f} {Constants.DEVISE}",
                         size=16,
                         weight=FontWeight.BOLD,
                         color=color,

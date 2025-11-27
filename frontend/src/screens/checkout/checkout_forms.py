@@ -28,7 +28,7 @@ class CheckoutForms:
             hint_text=self.screen.get_text("enter_amount"),
             keyboard_type=KeyboardType.NUMBER,
             border_color=Constants.PRIMARY_COLOR,
-            prefix=Text("$ "),
+            suffix=Text(f" {Constants.DEVISE}"),
             expand=True,
         )
 
@@ -37,10 +37,10 @@ class CheckoutForms:
             hint_text=self.screen.get_text("select_type"),
             border_color=Constants.PRIMARY_COLOR,
             options=[
-                dropdown.Option("Entrée", self.screen.get_text("entry")),
-                dropdown.Option("Sortie", self.screen.get_text("exit")),
+                dropdown.Option("entry", self.screen.get_text("entry")),
+                # dropdown.Option("Sortie", self.screen.get_text("exit")),
             ],
-            value="Entrée",
+            value="entry",
             expand=True,
         )
 
@@ -110,7 +110,7 @@ class CheckoutForms:
             hint_text=self.screen.get_text("enter_amount"),
             keyboard_type=KeyboardType.NUMBER,
             border_color=Constants.PRIMARY_COLOR,
-            prefix=Text("$ "),
+            suffix=Text(f"{Constants.DEVISE} "),
             expand=True,
         )
 
@@ -205,7 +205,7 @@ class CheckoutForms:
             hint_text=self.screen.get_text("enter_payment_amount"),
             keyboard_type=KeyboardType.NUMBER,
             border_color=Constants.PRIMARY_COLOR,
-            prefix=Text("$ "),
+            suffix=Text(f"{Constants.DEVISE} "),
             expand=True,
         )
 
@@ -213,7 +213,7 @@ class CheckoutForms:
             label=self.screen.get_text("payment_date"),
             hint_text=self.screen.get_text("payment_date_hint"),
             border_color=Constants.PRIMARY_COLOR,
-            value=datetime.now().strftime("%Y-%m-%d"),
+            value=datetime.now().strftime("%d-%m-%Y"),
             read_only=True,
             expand=True,
         )

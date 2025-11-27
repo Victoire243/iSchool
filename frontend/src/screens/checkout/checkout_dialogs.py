@@ -54,7 +54,7 @@ class CheckoutDialogs:
                         Divider(height=1),
                         self._build_detail_row(
                             self.screen.get_text("amount"),
-                            f"$ {entry.amount:,.0f}",
+                            f"{entry.amount:,.0f} {Constants.DEVISE}",
                             color,
                         ),
                     ],
@@ -94,7 +94,7 @@ Heure: {datetime.now().strftime("%H:%M:%S")}
 Type: {entry.type}
 Description: {entry.description}
 
-Montant: $ {entry.amount:,.0f}
+Montant:  {entry.amount:,.0f} {Constants.DEVISE}
 
 ═══════════════════════════════════
         Merci de votre confiance
